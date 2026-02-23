@@ -1,0 +1,124 @@
+# ========== Rust / Tauri ==========
+/target/
+/**/*.rs.bk
+**/*.rs.bk
+
+# Cargo generated files
+/Cargo.lock
+
+# Tauri generated files
+/src-tauri/target/
+/src-tauri/tauri.conf.json # if you want to ignore config, remove if not
+
+# ========== Node / Next.js / frontend ==========
+/node_modules/
+/frontend/node_modules/
+/frontend/.next/
+/frontend/out/
+/frontend/.env
+/frontend/.env.local
+/frontend/.env.*.local
+
+# npm logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# build
+*.tsbuildinfo
+
+# ========== Python / FastAPI backend ==========
+/__pycache__/
+*.py[cod]
+*.egg-info/
+/dist/
+/dist_nuitka/
+/build/
+/.venv/
+/env/
+/venv/
+/v_env/
+/.venv/
+/pip-wheel-metadata/
+/*.egg
+*.manifest
+*.spec
+*.log
+*.pyc
+
+# VSCode Python workspace settings
+.vscode/settings.json
+
+# Python env files
+.env
+.env.*
+
+# マイグレーション履歴（チームで共有しない場合）
+migrations/versions/*.pyc
+migrations/versions/__pycache__/
+
+# ========== OS / IDE / Editor ==========
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ========== Logs ==========
+*.log
+
+# ========== Build artifacts ==========
+/dist/
+/build/
+/release/
+/debug/
+
+# ========== Misc binaries ==========
+*.exe
+*.dll
+*.so
+*.dylib
+*.pdb
+*.class
+*.jar
+*.war
+
+# ========== Tauri bundles ==========
+/src-tauri/target/release/bundle/
+
+# ========== Temporary files ==========
+*.tmp
+*.temp
+
+# ========== Local test database ==========
+test.db
+
+# ========== Mac specific ==========
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+# Thumbnails
+._*
+
+# Files that might appear on external disks
+.Spotlight-V100
+.Trashes
+
+# ========== Linux specific ==========
+*~
+.nfs*
+
+# ========== Windows specific ==========
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ========== Other ==========
+# NOTE: lockfile は再現性のため基本的にコミット対象（例: poetry.lock）。
+# ただし、一部ツールが生成する一時 lock を無視したい場合は個別に追加する。
+/*.coverage
+/logs
