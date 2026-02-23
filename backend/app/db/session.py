@@ -1,10 +1,7 @@
-import os
 from sqlmodel import create_engine, Session
+from app.core.config import settings
 
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL",
-    "postgresql://postgres:password@localhost:5433/taskforge"
-)
+DATABASE_URL = settings.DATABASE_URL
 
 # Engine is globally configured here
 engine = create_engine(DATABASE_URL, echo=True)
