@@ -25,6 +25,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { MoreHorizontal, GripVertical } from 'lucide-react';
+import { TaskDetailDialog } from '@/components/task-detail-dialog';
+import { useAuthStore } from '@/hooks/use-auth-store';
 
 interface KanbanBoardProps {
   tasks: Task[];
@@ -39,6 +41,8 @@ const COLUMNS: { id: TaskStatus; title: string }[] = [
 
 export function KanbanBoard({ tasks, onTaskUpdate }: KanbanBoardProps) {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -85,9 +89,23 @@ export function KanbanBoard({ tasks, onTaskUpdate }: KanbanBoardProps) {
             id={column.id}
             title={column.title}
             tasks={tasks.filter((t) => t.status === column.id)}
+            onTaskClick={(task) => {
+              setSelectedTask(task);
+              setIsDialogOpen(true);
+            }}
           />
         ))}
       </div>
+      
+      <TaskDetailDialog
+        task={selectedTask}
+        isOpen={isDialogOpen}
+        onClose={() => {
+          setIsDialogOpen(false);
+          setSelectedTask(null);
+        }}
+        projectId={tasks[0]?.project_id}
+      />
       <DragOverlay dropAnimation={{
         sideEffects: defaultDropAnimationSideEffects({
           styles: {
@@ -103,7 +121,7 @@ export function KanbanBoard({ tasks, onTaskUpdate }: KanbanBoardProps) {
   );
 }
 
-function KanbanColumn({ id, title, tasks }: { id: string; title: string; tasks: Task[] }) {
+function KanbanColumn({ id, title, tasks, onTaskClick }: { id: string; title: string; tasks: Task[]; onTaskClick: (task: Task) => void }) {
   return (
     <div className="flex flex-col gap-4 bg-zinc-900/30 p-4 rounded-2xl border border-zinc-800/50 min-h-[500px]">
       <div className="flex items-center justify-between px-2">
@@ -121,7 +139,7 @@ function KanbanColumn({ id, title, tasks }: { id: string; title: string; tasks: 
       <SortableContext id={id} items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
         <div className="flex flex-col gap-3">
           {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} />
+            <TaskCard key={task.id} task={task} onClick={() => onTaskClick(task)} />
           ))}
         </div>
       </SortableContext>
@@ -129,7 +147,7 @@ function KanbanColumn({ id, title, tasks }: { id: string; title: string; tasks: 
   );
 }
 
-function TaskCard({ task, isDragging }: { task: Task; isDragging?: boolean }) {
+function TaskCard({ task, isDragging, onClick }: { task: Task; isDragging?: boolean; onClick?: () => void }) {
   const {
     setNodeRef,
     attributes,
@@ -169,6 +187,7 @@ function TaskCard({ task, isDragging }: { task: Task; isDragging?: boolean }) {
         "bg-zinc-900 border-zinc-800 p-4 hover:border-zinc-700 transition-all cursor-default select-none group",
         isDragging && "opacity-50 ring-2 ring-zinc-500 border-zinc-500 shadow-2xl"
       )}
+      onClick={onClick}
     >
       <div className="flex flex-col gap-3">
         <div className="flex items-start justify-between">
