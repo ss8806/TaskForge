@@ -53,6 +53,7 @@ async def decompose_tasks(
         for item in result.tasks:
             task = Task(
                 project_id=project_id,
+                sprint_id=body.sprint_id,
                 title=item.title,
                 description=item.description,
                 priority=item.priority,

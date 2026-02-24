@@ -24,9 +24,10 @@ import { format } from 'date-fns';
 
 interface ScrumViewProps {
   projectId: number;
+  onTaskClick: (task: Task) => void;
 }
 
-export function ScrumView({ projectId }: ScrumViewProps) {
+export function ScrumView({ projectId, onTaskClick }: ScrumViewProps) {
   const queryClient = useQueryClient();
   const [expandedSprints, setExpandedSprints] = useState<Record<number, boolean>>({});
 
@@ -80,6 +81,7 @@ export function ScrumView({ projectId }: ScrumViewProps) {
               tasks={tasks?.filter(t => t.sprint_id === sprint.id) || []}
               isExpanded={expandedSprints[sprint.id] ?? true}
               onToggle={() => toggleSprint(sprint.id)}
+              onTaskClick={onTaskClick}
               onMoveToBacklog={(taskId) => updateTaskMutation.mutate({ taskId, data: { sprint_id: null } })}
             />
           ))
@@ -100,6 +102,7 @@ export function ScrumView({ projectId }: ScrumViewProps) {
                 <BacklogTaskCard 
                   key={task.id} 
                   task={task} 
+                  onTaskClick={() => onTaskClick(task)}
                   sprints={sprints || []}
                   onAssignSprint={(sprintId) => updateTaskMutation.mutate({ taskId: task.id, data: { sprint_id: sprintId } })}
                 />
@@ -117,12 +120,14 @@ function SprintSection({
   tasks, 
   isExpanded, 
   onToggle,
+  onTaskClick,
   onMoveToBacklog 
 }: { 
   sprint: Sprint; 
   tasks: Task[]; 
   isExpanded: boolean; 
   onToggle: () => void;
+  onTaskClick: (task: Task) => void;
   onMoveToBacklog: (taskId: number) => void;
 }) {
   const completedTasks = tasks.filter(t => t.status === 'done').length;
@@ -176,7 +181,8 @@ function SprintSection({
               {tasks.map(task => (
                 <div 
                   key={task.id}
-                  className="group flex items-center justify-between p-3 rounded-xl hover:bg-zinc-800/50 transition-colors"
+                  className="group flex items-center justify-between p-3 rounded-xl hover:bg-zinc-800/50 transition-colors cursor-pointer"
+                  onClick={() => onTaskClick(task)}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <TaskStatusIcon status={task.status} />
@@ -211,10 +217,12 @@ function SprintSection({
 function BacklogTaskCard({ 
   task, 
   sprints, 
+  onTaskClick,
   onAssignSprint 
 }: { 
   task: Task; 
   sprints: Sprint[]; 
+  onTaskClick: () => void;
   onAssignSprint: (sprintId: number) => void;
 }) {
   const priorityColors = {
@@ -224,7 +232,10 @@ function BacklogTaskCard({
   };
 
   return (
-    <div className="group flex items-center justify-between p-3 rounded-xl bg-zinc-900/50 border border-zinc-800/50 hover:border-zinc-700 transition-all">
+    <div 
+      className="group flex items-center justify-between p-3 rounded-xl bg-zinc-900/50 border border-zinc-800/50 hover:border-zinc-700 transition-all cursor-pointer"
+      onClick={onTaskClick}
+    >
       <div className="flex items-center gap-3 min-w-0">
         <Badge variant="outline" className={cn("text-[8px] h-4 px-1", priorityColors[task.priority])}>
           {task.priority === 3 ? 'High' : task.priority === 2 ? 'Med' : 'Low'}

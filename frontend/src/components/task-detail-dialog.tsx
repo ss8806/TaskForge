@@ -62,7 +62,7 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
         start_date: task.start_date ? format(new Date(task.start_date), 'yyyy-MM-dd') : '',
         end_date: task.end_date ? format(new Date(task.end_date), 'yyyy-MM-dd') : '',
         estimate: task.estimate?.toString() || '',
-        sprint_id: task.sprint_id || 'none',
+        sprint_id: task.sprint_id ?? 'none',
       });
     }
   }, [task]);

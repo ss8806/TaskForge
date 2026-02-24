@@ -20,7 +20,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useState, useMemo } from 'react';
-import { Task, TaskStatus } from '@/types';
+import { Task, TaskStatus, Sprint } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -30,7 +30,10 @@ import { useAuthStore } from '@/hooks/use-auth-store';
 
 interface KanbanBoardProps {
   tasks: Task[];
+  projectId: number;
+  sprints: Sprint[];
   onTaskUpdate: (taskId: number, newStatus: TaskStatus) => void;
+  onTaskClick: (task: Task) => void;
 }
 
 const COLUMNS: { id: TaskStatus; title: string }[] = [
@@ -39,10 +42,8 @@ const COLUMNS: { id: TaskStatus; title: string }[] = [
   { id: 'done', title: '完了' },
 ];
 
-export function KanbanBoard({ tasks, onTaskUpdate }: KanbanBoardProps) {
+export function KanbanBoard({ tasks, projectId, sprints, onTaskUpdate, onTaskClick }: KanbanBoardProps) {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -89,23 +90,12 @@ export function KanbanBoard({ tasks, onTaskUpdate }: KanbanBoardProps) {
             id={column.id}
             title={column.title}
             tasks={tasks.filter((t) => t.status === column.id)}
-            onTaskClick={(task) => {
-              setSelectedTask(task);
-              setIsDialogOpen(true);
-            }}
+            sprints={sprints}
+            onTaskClick={onTaskClick}
           />
         ))}
       </div>
       
-      <TaskDetailDialog
-        task={selectedTask}
-        isOpen={isDialogOpen}
-        onClose={() => {
-          setIsDialogOpen(false);
-          setSelectedTask(null);
-        }}
-        projectId={tasks[0]?.project_id}
-      />
       <DragOverlay dropAnimation={{
         sideEffects: defaultDropAnimationSideEffects({
           styles: {
@@ -115,13 +105,13 @@ export function KanbanBoard({ tasks, onTaskUpdate }: KanbanBoardProps) {
           },
         }),
       }}>
-        {activeTask ? <TaskCard task={activeTask} isDragging /> : null}
+        {activeTask ? <TaskCard task={activeTask} sprintName={sprints.find(s => s.id === activeTask.sprint_id)?.name} isDragging /> : null}
       </DragOverlay>
     </DndContext>
   );
 }
 
-function KanbanColumn({ id, title, tasks, onTaskClick }: { id: string; title: string; tasks: Task[]; onTaskClick: (task: Task) => void }) {
+function KanbanColumn({ id, title, tasks, sprints, onTaskClick }: { id: string; title: string; tasks: Task[]; sprints: Sprint[]; onTaskClick: (task: Task) => void }) {
   return (
     <div className="flex flex-col gap-4 bg-zinc-900/30 p-4 rounded-2xl border border-zinc-800/50 min-h-[500px]">
       <div className="flex items-center justify-between px-2">
@@ -139,7 +129,7 @@ function KanbanColumn({ id, title, tasks, onTaskClick }: { id: string; title: st
       <SortableContext id={id} items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
         <div className="flex flex-col gap-3">
           {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} onClick={() => onTaskClick(task)} />
+            <TaskCard key={task.id} task={task} sprintName={sprints.find(s => s.id === task.sprint_id)?.name} onClick={() => onTaskClick(task)} />
           ))}
         </div>
       </SortableContext>
@@ -147,7 +137,7 @@ function KanbanColumn({ id, title, tasks, onTaskClick }: { id: string; title: st
   );
 }
 
-function TaskCard({ task, isDragging, onClick }: { task: Task; isDragging?: boolean; onClick?: () => void }) {
+function TaskCard({ task, sprintName, isDragging, onClick }: { task: Task; sprintName?: string; isDragging?: boolean; onClick?: () => void }) {
   const {
     setNodeRef,
     attributes,
@@ -194,6 +184,11 @@ function TaskCard({ task, isDragging, onClick }: { task: Task; isDragging?: bool
           <Badge variant="outline" className={cn("text-[10px] uppercase font-bold tracking-wider px-1.5 h-4 border", priorityColors[task.priority])}>
             {priorityLabels[task.priority]}
           </Badge>
+          {sprintName && (
+            <Badge variant="secondary" className="text-[10px] bg-indigo-500/10 text-indigo-400 border-none px-1.5 h-4">
+              {sprintName}
+            </Badge>
+          )}
           <div {...attributes} {...listeners} className="text-zinc-700 hover:text-zinc-500 cursor-grab active:cursor-grabbing">
             <GripVertical className="h-4 w-4" />
           </div>

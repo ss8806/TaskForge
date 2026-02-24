@@ -2,11 +2,12 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { projectsApi, tasksApi, aiApi } from '@/lib/api';
+import { projectsApi, tasksApi, aiApi, sprintsApi } from '@/lib/api';
 import { KanbanBoard } from '@/components/kanban-board';
 import { ScrumView } from '@/components/scrum-view';
 import { SprintManager } from '@/components/sprint-manager';
 import { GanttChartView } from '@/components/gantt-chart-view';
+import { TaskDetailDialog } from '@/components/task-detail-dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -42,10 +43,14 @@ export default function ProjectPage() {
   const projectId = Number(params.id);
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [taskForm, setTaskForm] = useState({ title: '', description: '' });
+  const [taskForm, setTaskForm] = useState<{title: string, description: string, sprint_id?: number}>({ title: '', description: '', sprint_id: undefined });
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [activeTab, setActiveTab] = useState('kanban');
+  const [selectedSprintId, setSelectedSprintId] = useState<string>('all');
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [aiSprintId, setAiSprintId] = useState<string>('none');
 
   const { data: project, isLoading: isProjectLoading } = useQuery({
     queryKey: ['projects', projectId],
@@ -57,6 +62,11 @@ export default function ProjectPage() {
     queryFn: () => tasksApi.list(projectId).then((res) => res.data),
   });
 
+  const { data: sprints } = useQuery({
+    queryKey: ['projects', projectId, 'sprints'],
+    queryFn: () => sprintsApi.list(projectId).then((res: any) => res.data),
+  });
+
   const updateTaskMutation = useMutation({
     mutationFn: ({ taskId, status }: { taskId: number; status: TaskStatus }) =>
       tasksApi.update(taskId, { status }),
@@ -66,20 +76,21 @@ export default function ProjectPage() {
   });
 
   const createTaskMutation = useMutation({
-    mutationFn: (data: typeof taskForm) => tasksApi.create(projectId, data),
+    mutationFn: (data: any) => tasksApi.create(projectId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'tasks'] });
       setIsTaskModalOpen(false);
-      setTaskForm({ title: '', description: '' });
+      setTaskForm({ title: '', description: '', sprint_id: undefined });
     },
   });
 
   const aiDecomposeMutation = useMutation({
-    mutationFn: (prompt: string) => aiApi.decompose(projectId, prompt),
+    mutationFn: () => aiApi.decompose(projectId, aiPrompt, aiSprintId === 'none' ? undefined : Number(aiSprintId)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'tasks'] });
       setIsAiModalOpen(false);
       setAiPrompt('');
+      setAiSprintId('none');
     },
   });
 
@@ -137,6 +148,19 @@ export default function ProjectPage() {
                         className="bg-zinc-800 border-zinc-700 min-h-[100px]" 
                       />
                     </div>
+                    <div className="space-y-2">
+                       <Label>スプリント (任意)</Label>
+                       <select 
+                         className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100"
+                         value={taskForm.sprint_id || ''}
+                         onChange={(e) => setTaskForm(prev => ({ ...prev, sprint_id: e.target.value ? Number(e.target.value) : undefined }))}
+                       >
+                         <option value="">なし (バックログ)</option>
+                         {sprints?.map((s: any) => (
+                           <option key={s.id} value={s.id}>{s.name}</option>
+                         ))}
+                       </select>
+                    </div>
                   </div>
                   <DialogFooter>
                     <Button 
@@ -176,10 +200,23 @@ export default function ProjectPage() {
                         className="bg-zinc-800 border-zinc-700 min-h-[120px]" 
                       />
                     </div>
+                    <div className="space-y-2">
+                       <Label>追加先スプリント (任意)</Label>
+                       <select 
+                         className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100"
+                         value={aiSprintId}
+                         onChange={(e) => setAiSprintId(e.target.value)}
+                       >
+                         <option value="none">なし (バックログ)</option>
+                         {sprints?.map((s: any) => (
+                           <option key={s.id} value={s.id.toString()}>{s.name}</option>
+                         ))}
+                       </select>
+                    </div>
                   </div>
                   <DialogFooter>
                     <Button 
-                      onClick={() => aiDecomposeMutation.mutate(aiPrompt)}
+                      onClick={() => aiDecomposeMutation.mutate()}
                       className="bg-indigo-600 hover:bg-indigo-500 text-white"
                       disabled={aiDecomposeMutation.isPending || !aiPrompt.trim()}
                     >
@@ -231,6 +268,25 @@ export default function ProjectPage() {
                </TabsTrigger>
              </TabsList>
            </Tabs>
+
+           {activeTab === 'kanban' && (
+             <div className="flex items-center gap-2">
+               <span className="text-xs text-zinc-500">表示:</span>
+               <select 
+                 value={selectedSprintId}
+                 onChange={(e) => setSelectedSprintId(e.target.value)}
+                 className="bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+               >
+                 <option value="all">すべてのタスク</option>
+                 <option value="backlog">バックログのみ</option>
+                 <optgroup label="スプリント">
+                   {sprints?.map((s: any) => (
+                     <option key={s.id} value={s.id.toString()}>{s.name}</option>
+                   ))}
+                 </optgroup>
+               </select>
+             </div>
+           )}
         </div>
 
         <div className="flex-1 min-h-[600px]">
@@ -240,16 +296,42 @@ export default function ProjectPage() {
             </div>
           ) : activeTab === 'kanban' ? (
             <KanbanBoard 
-              tasks={tasks || []} 
-              onTaskUpdate={(taskId, status) => updateTaskMutation.mutate({ taskId, status })} 
+              tasks={(tasks || []).filter(t => {
+                if (selectedSprintId === 'all') return true;
+                if (selectedSprintId === 'backlog') return t.sprint_id === null;
+                return t.sprint_id === Number(selectedSprintId);
+              })} 
+              projectId={projectId}
+              sprints={sprints || []}
+              onTaskUpdate={(taskId, status) => updateTaskMutation.mutate({ taskId, status })}
+              onTaskClick={(task) => {
+                setSelectedTask(task);
+                setIsDetailOpen(true);
+              }}
             />
           ) : activeTab === 'scrum' ? (
-            <ScrumView projectId={projectId} />
+            <ScrumView 
+              projectId={projectId} 
+              onTaskClick={(task) => {
+                setSelectedTask(task);
+                setIsDetailOpen(true);
+              }}
+            />
           ) : (
             <GanttChartView projectId={projectId} />
           )}
         </div>
       </main>
+
+      <TaskDetailDialog
+        task={selectedTask}
+        isOpen={isDetailOpen}
+        onClose={() => {
+          setIsDetailOpen(false);
+          setSelectedTask(null);
+        }}
+        projectId={projectId}
+      />
     </div>
   );
 }

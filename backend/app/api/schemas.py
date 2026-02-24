@@ -104,6 +104,7 @@ class TaskResponse(BaseModel):
 
 class AIDecompositionRequest(BaseModel):
     prompt: str
+    sprint_id: Optional[int] = None
 
 
 class AIDecompositionItem(BaseModel):

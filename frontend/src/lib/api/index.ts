@@ -64,6 +64,6 @@ export const tasksApi = {
 // ── AI ────────────────────────────────────────────────────────────────────────
 
 export const aiApi = {
-    decompose: (projectId: number, prompt: string) =>
-        apiClient.post<{ tasks: any[] }>(`/api/projects/${projectId}/ai/decompose`, { prompt }),
+    decompose: (projectId: number, prompt: string, sprintId?: number) =>
+        apiClient.post<{ tasks: any[] }>(`/api/projects/${projectId}/ai/decompose`, { prompt, sprint_id: sprintId }),
 };
