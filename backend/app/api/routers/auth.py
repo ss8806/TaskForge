@@ -22,7 +22,7 @@ def register(body: RegisterRequest, session: SessionDep):
     session.add(user)
     session.commit()
     session.refresh(user)
-    token = create_access_token(subject=user.id, email=user.email)
+    token = create_access_token(subject=user.id, email=user.email, role=user.role)
     return TokenResponse(access_token=token)
 
 
@@ -34,5 +34,5 @@ def login(body: LoginRequest, session: SessionDep):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
-    token = create_access_token(subject=user.id, email=user.email)
+    token = create_access_token(subject=user.id, email=user.email, role=user.role)
     return TokenResponse(access_token=token)
