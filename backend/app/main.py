@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.redis import close_redis, init_redis
-from app.api.routers import auth, projects, tasks, sprints
+from app.api.routers import auth, projects, tasks, sprints, ai
 
 
 @asynccontextmanager
@@ -35,6 +35,7 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(projects.router, prefix="/api")
 app.include_router(tasks.router, prefix="/api")
 app.include_router(sprints.router, prefix="/api")
+app.include_router(ai.router, prefix="/api")
 
 
 @app.get("/health")

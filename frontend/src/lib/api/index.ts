@@ -39,6 +39,8 @@ export const sprintsApi = {
         apiClient.get<Sprint[]>(`/api/projects/${projectId}/sprints`),
     create: (projectId: number, data: SprintCreate) =>
         apiClient.post<Sprint>(`/api/projects/${projectId}/sprints`, data),
+    update: (projectId: number, sprintId: number, data: SprintCreate) =>
+        apiClient.put<Sprint>(`/api/projects/${projectId}/sprints/${sprintId}`, data),
     delete: (projectId: number, sprintId: number) =>
         apiClient.delete(`/api/projects/${projectId}/sprints/${sprintId}`),
 };
@@ -57,4 +59,11 @@ export const tasksApi = {
         apiClient.put<Task>(`/api/tasks/${taskId}`, data),
     delete: (taskId: number) =>
         apiClient.delete(`/api/tasks/${taskId}`),
+};
+
+// ── AI ────────────────────────────────────────────────────────────────────────
+
+export const aiApi = {
+    decompose: (projectId: number, prompt: string) =>
+        apiClient.post<{ tasks: any[] }>(`/api/projects/${projectId}/ai/decompose`, { prompt }),
 };

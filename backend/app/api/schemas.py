@@ -98,3 +98,20 @@ class TaskResponse(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+# ── AI schemas ──────────────────────────────────────────────────────────────
+
+class AIDecompositionRequest(BaseModel):
+    prompt: str
+
+
+class AIDecompositionItem(BaseModel):
+    title: str
+    description: Optional[str] = None
+    priority: int = 2
+    estimate: Optional[float] = None
+
+
+class AIDecompositionResponse(BaseModel):
+    tasks: list[AIDecompositionItem]

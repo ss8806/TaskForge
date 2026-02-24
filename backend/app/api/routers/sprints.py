@@ -72,3 +72,29 @@ def delete_sprint(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sprint not found")
     session.delete(sprint)
     session.commit()
+
+
+@router.put(
+    "/projects/{project_id}/sprints/{sprint_id}",
+    response_model=SprintResponse,
+)
+def update_sprint(
+    project_id: int,
+    sprint_id: int,
+    body: SprintCreate,  # SprintUpdateスキーマを別途作るほどでもないので再利用
+    session: SessionDep,
+    current_user_id: CurrentUserIdDep,
+):
+    _verify_project_access(project_id, current_user_id, session)
+    sprint = session.get(Sprint, sprint_id)
+    if not sprint or sprint.project_id != project_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sprint not found")
+
+    update_data = body.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(sprint, key, value)
+    
+    session.add(sprint)
+    session.commit()
+    session.refresh(sprint)
+    return sprint

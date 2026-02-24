@@ -2,8 +2,11 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { projectsApi, tasksApi } from '@/lib/api';
+import { projectsApi, tasksApi, aiApi } from '@/lib/api';
 import { KanbanBoard } from '@/components/kanban-board';
+import { ScrumView } from '@/components/scrum-view';
+import { SprintManager } from '@/components/sprint-manager';
+import { GanttChartView } from '@/components/gantt-chart-view';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -26,6 +29,7 @@ import {
   ListTodo, 
   BarChart3, 
   Sparkles,
+  Calendar,
   Loader2
 } from 'lucide-react';
 import { useState } from 'react';
@@ -39,6 +43,9 @@ export default function ProjectPage() {
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [taskForm, setTaskForm] = useState({ title: '', description: '' });
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [activeTab, setActiveTab] = useState('kanban');
 
   const { data: project, isLoading: isProjectLoading } = useQuery({
     queryKey: ['projects', projectId],
@@ -64,6 +71,15 @@ export default function ProjectPage() {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'tasks'] });
       setIsTaskModalOpen(false);
       setTaskForm({ title: '', description: '' });
+    },
+  });
+
+  const aiDecomposeMutation = useMutation({
+    mutationFn: (prompt: string) => aiApi.decompose(projectId, prompt),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'tasks'] });
+      setIsAiModalOpen(false);
+      setAiPrompt('');
     },
   });
 
@@ -135,17 +151,71 @@ export default function ProjectPage() {
                 </DialogContent>
              </Dialog>
 
-             <Button size="sm" className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold">
-               <Sparkles className="h-4 w-4 mr-2" />
-               AI分解
-             </Button>
+             <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold">
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    AI分解
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-100">
+                  <DialogHeader>
+                    <DialogTitle>AIタスク分解</DialogTitle>
+                    <DialogDescription className="text-zinc-400">
+                      やりたいことを入力すると、AIがタスクを自動的に分解して作成します。
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="py-4 space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="ai-prompt">要件・アイディア</Label>
+                      <Textarea 
+                        id="ai-prompt" 
+                        placeholder="例: Next.jsでブログサービスを作りたい。ユーザー登録、記事投稿、コメント機能が必要。" 
+                        value={aiPrompt}
+                        onChange={(e) => setAiPrompt(e.target.value)}
+                        className="bg-zinc-800 border-zinc-700 min-h-[120px]" 
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button 
+                      onClick={() => aiDecomposeMutation.mutate(aiPrompt)}
+                      className="bg-indigo-600 hover:bg-indigo-500 text-white"
+                      disabled={aiDecomposeMutation.isPending || !aiPrompt.trim()}
+                    >
+                      {aiDecomposeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      AIに任せる
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+             </Dialog>
+
+             <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="bg-transparent border-zinc-800 text-zinc-400 hover:text-zinc-100 flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    スプリント管理
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-zinc-950 border-zinc-800 text-zinc-100 max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>スプリント管理</DialogTitle>
+                    <DialogDescription>
+                      プロジェクトのスプリントを管理します。
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <SprintManager projectId={projectId} />
+                  </div>
+                </DialogContent>
+             </Dialog>
           </div>
         </div>
       </header>
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex flex-col gap-6">
         <div className="flex items-center justify-between">
-           <Tabs defaultValue="kanban" className="w-auto">
+           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
              <TabsList className="bg-zinc-900 border border-zinc-800 h-10 p-1">
                <TabsTrigger value="kanban" className="data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 h-8 flex gap-2">
                  <Layout className="h-3.5 w-3.5" />
@@ -168,11 +238,15 @@ export default function ProjectPage() {
             <div className="grid grid-cols-3 gap-6">
               {[1, 2, 3].map(i => <div key={i} className="h-[400px] bg-zinc-900/50 rounded-2xl border border-zinc-800 animate-pulse" />)}
             </div>
-          ) : (
+          ) : activeTab === 'kanban' ? (
             <KanbanBoard 
               tasks={tasks || []} 
               onTaskUpdate={(taskId, status) => updateTaskMutation.mutate({ taskId, status })} 
             />
+          ) : activeTab === 'scrum' ? (
+            <ScrumView projectId={projectId} />
+          ) : (
+            <GanttChartView projectId={projectId} />
           )}
         </div>
       </main>
