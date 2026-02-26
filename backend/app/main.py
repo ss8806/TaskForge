@@ -15,6 +15,15 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# CORS configuration - MUST BE AT THE TOP
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # 1. MCPの初期化
 mcp = FastApiMCP(
     fastapi=app,
@@ -45,15 +54,6 @@ async def lifespan(app: FastAPI):
     await close_redis()
 
 app.lifespan = lifespan
-
-# CORS configuration
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # ── ルーター登録 ──────────────────────────────────────────────────────────────
 app.include_router(auth.router, prefix="/api")
