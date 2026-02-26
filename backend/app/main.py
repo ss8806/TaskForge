@@ -1,10 +1,13 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_mcp import FastApiMCP
+from sqlmodel import Session, select
 
 from app.core.redis import close_redis, init_redis
 from app.api.routers import auth, projects, tasks, sprints, ai, admin
+from app.db.session import engine, get_session
+from app.models import Project, Task
 
 app = FastAPI(
     title="TaskForge API",
@@ -18,6 +21,22 @@ mcp = FastApiMCP(
     name="TaskForge API MCP",
     description="MCP server for TaskForge API"
 )
+
+# --- MCP Compatible Routes (Automatically exposed as tools) ---
+
+@app.get("/mcp/projects", tags=["mcp"])
+def list_projects_mcp(session: Session = Depends(get_session)):
+    """List all projects available in TaskForge."""
+    statement = select(Project)
+    projects = session.exec(statement).all()
+    return projects
+
+@app.get("/mcp/tasks/{project_id}", tags=["mcp"])
+def list_tasks_mcp(project_id: int, session: Session = Depends(get_session)):
+    """List all tasks for a specific project by project_id."""
+    statement = select(Task).where(Task.project_id == project_id)
+    tasks = session.exec(statement).all()
+    return tasks
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
