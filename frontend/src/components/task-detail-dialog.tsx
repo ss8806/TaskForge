@@ -99,7 +99,7 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-100 max-w-lg">
+      <DialogContent className="bg-card border-border text-foreground max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
             タスク詳細
@@ -113,7 +113,7 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
               id="edit-title"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="bg-zinc-800 border-zinc-700"
+              className="bg-background border-border text-foreground focus:ring-primary/20"
             />
           </div>
 
@@ -123,7 +123,7 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
               id="edit-desc"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="bg-zinc-800 border-zinc-700 min-h-[100px]"
+              className="bg-background border-border text-foreground focus:ring-primary/20 min-h-[100px]"
             />
           </div>
 
@@ -134,10 +134,10 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
                 value={formData.status}
                 onValueChange={(val) => setFormData({ ...formData, status: val as TaskStatus })}
               >
-                <SelectTrigger className="bg-zinc-800 border-zinc-700">
+                <SelectTrigger className="bg-background border-border">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-800 border-zinc-700 text-zinc-100">
+                <SelectContent className="bg-card border-border text-foreground">
                   <SelectItem value="todo">未着手</SelectItem>
                   <SelectItem value="doing">進行中</SelectItem>
                   <SelectItem value="done">完了</SelectItem>
@@ -151,10 +151,10 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
                 value={formData.priority.toString()}
                 onValueChange={(val) => setFormData({ ...formData, priority: parseInt(val) as TaskPriority })}
               >
-                <SelectTrigger className="bg-zinc-800 border-zinc-700">
+                <SelectTrigger className="bg-background border-border">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-800 border-zinc-700 text-zinc-100">
+                <SelectContent className="bg-card border-border text-foreground">
                   <SelectItem value="1">低 (Low)</SelectItem>
                   <SelectItem value="2">中 (Medium)</SelectItem>
                   <SelectItem value="3">高 (High)</SelectItem>
@@ -195,7 +195,7 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
                 step="0.5"
                 value={formData.estimate}
                 onChange={(e) => setFormData({ ...formData, estimate: e.target.value })}
-                className="bg-zinc-800 border-zinc-700"
+                className="bg-background border-border text-foreground focus:ring-primary/20"
               />
             </div>
             <div className="space-y-2">
@@ -204,10 +204,10 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
                 value={formData.sprint_id?.toString()}
                 onValueChange={(val) => setFormData({ ...formData, sprint_id: val === 'none' ? 'none' : parseInt(val) })}
               >
-                <SelectTrigger className="bg-zinc-800 border-zinc-700">
+                <SelectTrigger className="bg-background border-border">
                   <SelectValue placeholder="スプリントなし" />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-800 border-zinc-700 text-zinc-100">
+                <SelectContent className="bg-card border-border text-foreground">
                   <SelectItem value="none">なし</SelectItem>
                   {sprints?.map((s) => (
                     <SelectItem key={s.id} value={s.id.toString()}>
@@ -239,7 +239,7 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
               キャンセル
             </Button>
             <Button
-              className="bg-zinc-100 text-zinc-950 hover:bg-zinc-200"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
               onClick={handleSave}
               disabled={updateMutation.isPending || !formData.title.trim()}
             >

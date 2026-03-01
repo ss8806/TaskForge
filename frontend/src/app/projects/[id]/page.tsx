@@ -94,20 +94,20 @@ export default function ProjectPage() {
     },
   });
 
-  if (isProjectLoading) return <div className="flex items-center justify-center min-h-screen bg-zinc-950 text-white"><Loader2 className="animate-spin" /></div>;
+  if (isProjectLoading) return <div className="flex items-center justify-center min-h-screen bg-background text-foreground"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Header */}
-      <header className="border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-md sticky top-0 z-20">
+      <header className="border-b border-border bg-background/50 backdrop-blur-md sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => router.push('/dashboard')} className="text-zinc-500 hover:text-zinc-100">
+            <Button variant="ghost" size="icon" onClick={() => router.push('/dashboard')} className="text-muted-foreground hover:text-foreground">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-2">
-              <div className="p-1 rounded bg-zinc-800">
-                <Layout className="h-4 w-4 text-zinc-400" />
+              <div className="p-1 rounded bg-secondary">
+                <Layout className="h-4 w-4 text-muted-foreground" />
               </div>
               <h1 className="font-bold text-lg tracking-tight">{project?.name}</h1>
             </div>
@@ -120,12 +120,12 @@ export default function ProjectPage() {
              </Button>
              <Dialog open={isTaskModalOpen} onOpenChange={setIsTaskModalOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" className="bg-zinc-100 text-zinc-950 hover:bg-zinc-200 font-semibold">
+                  <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-xl">
                     <Plus className="h-4 w-4 mr-2" />
                     タスク追加
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-100">
+                <DialogContent className="bg-card border-border text-foreground">
                   <DialogHeader>
                     <DialogTitle>新規タスク</DialogTitle>
                   </DialogHeader>
@@ -136,7 +136,7 @@ export default function ProjectPage() {
                         id="title" 
                         value={taskForm.title}
                         onChange={(e) => setTaskForm(prev => ({ ...prev, title: e.target.value }))}
-                        className="bg-zinc-800 border-zinc-700" 
+                        className="bg-background border-border text-foreground focus:ring-primary/20" 
                       />
                     </div>
                     <div className="space-y-2">
@@ -145,13 +145,13 @@ export default function ProjectPage() {
                         id="desc" 
                         value={taskForm.description}
                         onChange={(e) => setTaskForm(prev => ({ ...prev, description: e.target.value }))}
-                        className="bg-zinc-800 border-zinc-700 min-h-[100px]" 
+                        className="bg-background border-border text-foreground focus:ring-primary/20 min-h-[100px]" 
                       />
                     </div>
                     <div className="space-y-2">
                        <Label>スプリント (任意)</Label>
                        <select 
-                         className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100"
+                         className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:ring-1 focus:ring-primary/20 outline-none"
                          value={taskForm.sprint_id || ''}
                          onChange={(e) => setTaskForm(prev => ({ ...prev, sprint_id: e.target.value ? Number(e.target.value) : undefined }))}
                        >
@@ -165,7 +165,7 @@ export default function ProjectPage() {
                   <DialogFooter>
                     <Button 
                       onClick={() => createTaskMutation.mutate(taskForm)}
-                      className="bg-zinc-100 text-zinc-950"
+                      className="bg-primary text-primary-foreground hover:bg-primary/90"
                       disabled={!taskForm.title}
                     >
                       {createTaskMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -177,15 +177,15 @@ export default function ProjectPage() {
 
              <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold">
+                  <Button size="sm" className="bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 font-semibold h-9 rounded-xl">
                     <Sparkles className="h-4 w-4 mr-2" />
                     AI分解
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-100">
+                <DialogContent className="bg-card border-border text-foreground">
                   <DialogHeader>
                     <DialogTitle>AIタスク分解</DialogTitle>
-                    <DialogDescription className="text-zinc-400">
+                    <DialogDescription className="text-muted-foreground">
                       やりたいことを入力すると、AIがタスクを自動的に分解して作成します。
                     </DialogDescription>
                   </DialogHeader>
@@ -197,13 +197,13 @@ export default function ProjectPage() {
                         placeholder="例: Next.jsでブログサービスを作りたい。ユーザー登録、記事投稿、コメント機能が必要。" 
                         value={aiPrompt}
                         onChange={(e) => setAiPrompt(e.target.value)}
-                        className="bg-zinc-800 border-zinc-700 min-h-[120px]" 
+                        className="bg-background border-border text-foreground focus:ring-primary/20 min-h-[120px]" 
                       />
                     </div>
                     <div className="space-y-2">
                        <Label>追加先スプリント (任意)</Label>
                        <select 
-                         className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100"
+                         className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:ring-1 focus:ring-primary/20 outline-none"
                          value={aiSprintId}
                          onChange={(e) => setAiSprintId(e.target.value)}
                        >
@@ -217,7 +217,7 @@ export default function ProjectPage() {
                   <DialogFooter>
                     <Button 
                       onClick={() => aiDecomposeMutation.mutate()}
-                      className="bg-indigo-600 hover:bg-indigo-500 text-white"
+                      className="bg-primary text-primary-foreground hover:bg-primary/90"
                       disabled={aiDecomposeMutation.isPending || !aiPrompt.trim()}
                     >
                       {aiDecomposeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -229,15 +229,15 @@ export default function ProjectPage() {
 
              <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="bg-transparent border-zinc-800 text-zinc-400 hover:text-zinc-100 flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="bg-transparent border-border text-muted-foreground hover:text-foreground flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     スプリント管理
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-zinc-950 border-zinc-800 text-zinc-100 max-w-2xl">
+                <DialogContent className="bg-card border-border text-foreground max-w-2xl">
                   <DialogHeader>
                     <DialogTitle>スプリント管理</DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription className="text-muted-foreground">
                       プロジェクトのスプリントを管理します。
                     </DialogDescription>
                   </DialogHeader>
@@ -253,16 +253,16 @@ export default function ProjectPage() {
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex flex-col gap-6">
         <div className="flex items-center justify-between">
            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
-             <TabsList className="bg-zinc-900 border border-zinc-800 h-10 p-1">
-               <TabsTrigger value="kanban" className="data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 h-8 flex gap-2">
+             <TabsList className="bg-secondary/50 border border-border h-10 p-1">
+               <TabsTrigger value="kanban" className="data-[state=active]:bg-background data-[state=active]:text-foreground h-8 flex gap-2">
                  <Layout className="h-3.5 w-3.5" />
                  カンバン
                </TabsTrigger>
-               <TabsTrigger value="scrum" className="data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 h-8 flex gap-2">
+               <TabsTrigger value="scrum" className="data-[state=active]:bg-background data-[state=active]:text-foreground h-8 flex gap-2">
                  <ListTodo className="h-3.5 w-3.5" />
                  スクラム
                </TabsTrigger>
-               <TabsTrigger value="gantt" className="data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 h-8 flex gap-2">
+               <TabsTrigger value="gantt" className="data-[state=active]:bg-background data-[state=active]:text-foreground h-8 flex gap-2">
                  <BarChart3 className="h-3.5 w-3.5" />
                  ガント
                </TabsTrigger>
@@ -271,17 +271,17 @@ export default function ProjectPage() {
 
            {activeTab === 'kanban' && (
              <div className="flex items-center gap-2">
-               <span className="text-xs text-zinc-500">表示:</span>
+               <span className="text-xs text-muted-foreground">表示:</span>
                <select 
                  value={selectedSprintId}
                  onChange={(e) => setSelectedSprintId(e.target.value)}
-                 className="bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                 className="bg-background border border-border text-xs text-muted-foreground rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/20"
                >
-                 <option value="all">すべてのタスク</option>
-                 <option value="backlog">バックログのみ</option>
-                 <optgroup label="スプリント">
+                 <option value="all" className="bg-background">すべてのタスク</option>
+                 <option value="backlog" className="bg-background">バックログのみ</option>
+                 <optgroup label="スプリント" className="bg-background">
                    {sprints?.map((s: any) => (
-                     <option key={s.id} value={s.id.toString()}>{s.name}</option>
+                     <option key={s.id} value={s.id.toString()} className="bg-background">{s.name}</option>
                    ))}
                  </optgroup>
                </select>
@@ -292,7 +292,7 @@ export default function ProjectPage() {
         <div className="flex-1 min-h-[600px]">
           {isTasksLoading ? (
             <div className="grid grid-cols-3 gap-6">
-              {[1, 2, 3].map(i => <div key={i} className="h-[400px] bg-zinc-900/50 rounded-2xl border border-zinc-800 animate-pulse" />)}
+              {[1, 2, 3].map(i => <div key={i} className="h-[400px] bg-secondary/50 rounded-2xl border border-border animate-pulse" />)}
             </div>
           ) : activeTab === 'kanban' ? (
             <KanbanBoard 

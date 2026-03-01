@@ -56,48 +56,48 @@ export function GanttChartView({ projectId }: GanttChartViewProps) {
   }, [days, startDate]);
 
   if (isLoading) {
-    return <div className="h-[400px] bg-zinc-900/50 rounded-2xl border border-zinc-800 animate-pulse" />;
+    return <div className="h-[400px] bg-secondary/30 rounded-2xl border border-border animate-pulse" />;
   }
 
   return (
-    <div className="flex flex-col gap-4 bg-zinc-900/30 rounded-3xl border border-zinc-800 overflow-hidden">
+    <div className="flex flex-col gap-4 bg-secondary/20 rounded-3xl border border-border overflow-hidden">
       {/* Gantt Header/Controls */}
-      <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/50">
+      <div className="p-4 border-b border-border flex items-center justify-between bg-secondary/30">
         <div className="flex items-center gap-4">
-          <h3 className="font-bold text-zinc-100 flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-indigo-400" />
+          <h3 className="font-bold text-foreground flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-primary" />
             タイムライン
           </h3>
-          <div className="flex items-center gap-1 bg-zinc-800 rounded-lg p-1">
-             <Button variant="ghost" size="icon" className="h-7 w-7 text-zinc-400" onClick={() => setViewDate(d => addDays(d, -7))}>
+          <div className="flex items-center gap-1 bg-secondary rounded-lg p-1">
+             <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={() => setViewDate(d => addDays(d, -7))}>
                <ChevronLeft className="h-4 w-4" />
              </Button>
-             <span className="text-xs font-medium px-2 text-zinc-300">
+             <span className="text-xs font-medium px-2 text-foreground/80">
                {format(viewDate, 'yyyy年 MM月', { locale: ja })}
              </span>
-             <Button variant="ghost" size="icon" className="h-7 w-7 text-zinc-400" onClick={() => setViewDate(d => addDays(d, 7))}>
+             <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={() => setViewDate(d => addDays(d, 7))}>
                <ChevronRight className="h-4 w-4" />
              </Button>
           </div>
         </div>
-        <Button variant="outline" size="sm" className="h-8 border-zinc-700 text-xs" onClick={() => setViewDate(startOfToday())}>
+        <Button variant="outline" size="sm" className="h-8 border-border text-xs" onClick={() => setViewDate(startOfToday())}>
           今日
         </Button>
       </div>
 
       <div className="flex overflow-hidden h-[500px]">
         {/* Task Names Column */}
-        <div className="w-48 shrink-0 border-r border-zinc-800 bg-zinc-950/20 z-10 shadow-xl">
-          <div className="h-12 border-b border-zinc-800 flex items-center px-4 bg-zinc-900/50">
-             <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-500">タスク名</span>
+        <div className="w-48 shrink-0 border-r border-border bg-secondary/10 z-10 shadow-xl shadow-black/5">
+          <div className="h-12 border-b border-border flex items-center px-4 bg-secondary/30">
+             <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">タスク名</span>
           </div>
           <div className="overflow-hidden">
             {tasks?.map(task => (
-              <div key={task.id} className="h-10 border-b border-zinc-800/50 flex items-center px-4 hover:bg-zinc-800/30 transition-colors">
-                <span className="text-xs text-zinc-400 truncate">{task.title}</span>
+              <div key={task.id} className="h-10 border-b border-border/50 flex items-center px-4 hover:bg-secondary/30 transition-colors">
+                <span className="text-xs text-foreground/70 truncate">{task.title}</span>
               </div>
             ))}
-            {tasks?.length === 0 && <div className="p-4 text-xs text-zinc-600">タスクなし</div>}
+            {tasks?.length === 0 && <div className="p-4 text-xs text-muted-foreground">タスクなし</div>}
           </div>
         </div>
 
@@ -108,22 +108,22 @@ export function GanttChartView({ projectId }: GanttChartViewProps) {
         >
           <div style={{ width: days.length * COLUMN_WIDTH }}>
             {/* Days Header */}
-            <div className="h-12 border-b border-zinc-800 flex bg-zinc-900/50">
+            <div className="h-12 border-b border-border flex bg-secondary/30">
               {days.map(day => (
                 <div 
                   key={day.toISOString()} 
                   className={cn(
-                    "shrink-0 border-r border-zinc-800/30 flex flex-col items-center justify-center gap-0.5",
-                    isSameDay(day, startOfToday()) && "bg-indigo-500/5"
+                    "shrink-0 border-r border-border/30 flex flex-col items-center justify-center gap-0.5",
+                    isSameDay(day, startOfToday()) && "bg-primary/5"
                   )}
                   style={{ width: COLUMN_WIDTH }}
                 >
-                  <span className="text-[9px] text-zinc-600 font-medium">
+                  <span className="text-[9px] text-muted-foreground font-medium">
                     {format(day, 'E', { locale: ja })}
                   </span>
                   <span className={cn(
                     "text-[10px] font-bold",
-                    isSameDay(day, startOfToday()) ? "text-indigo-400" : "text-zinc-400"
+                    isSameDay(day, startOfToday()) ? "text-primary" : "text-foreground/40"
                   )}>
                     {format(day, 'd')}
                   </span>
@@ -139,8 +139,8 @@ export function GanttChartView({ projectId }: GanttChartViewProps) {
                    <div 
                      key={day.toISOString()} 
                      className={cn(
-                       "h-full border-r border-zinc-800/20",
-                       isSameDay(day, startOfToday()) && "bg-indigo-500/5"
+                       "h-full border-r border-border/20",
+                       isSameDay(day, startOfToday()) && "bg-primary/5"
                      )} 
                      style={{ width: COLUMN_WIDTH }} 
                    />
@@ -150,7 +150,7 @@ export function GanttChartView({ projectId }: GanttChartViewProps) {
               {/* Task Bars */}
               <div className="relative z-10">
                 {tasks?.map(task => (
-                  <div key={task.id} className="h-10 border-b border-zinc-800/30 flex items-center relative">
+                  <div key={task.id} className="h-10 border-b border-border/30 flex items-center relative">
                     <TaskBar task={task} gridStartDate={startDate} daysCount={days.length} />
                   </div>
                 ))}
@@ -160,9 +160,9 @@ export function GanttChartView({ projectId }: GanttChartViewProps) {
         </div>
       </div>
       
-      <div className="p-3 bg-zinc-950/40 border-t border-zinc-800 flex justify-center gap-6 text-[10px] text-zinc-500 italic">
-         <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-indigo-500/80" /> 予定あり</div>
-         <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-zinc-800" /> 未設定</div>
+      <div className="p-3 bg-secondary/40 border-t border-border flex justify-center gap-6 text-[10px] text-muted-foreground italic">
+         <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-primary" /> 予定あり</div>
+         <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-secondary" /> 未設定</div>
       </div>
     </div>
   );
@@ -175,7 +175,7 @@ function TaskBar({ task, gridStartDate, daysCount }: { task: Task, gridStartDate
   if (!start) {
     return (
       <div 
-        className="absolute h-1.5 bg-zinc-800 rounded-full left-4 opacity-50" 
+        className="absolute h-1.5 bg-secondary rounded-full left-4 opacity-50" 
         style={{ width: COLUMN_WIDTH * 0.8 }} 
         title="日付未設定"
       />
@@ -195,12 +195,12 @@ function TaskBar({ task, gridStartDate, daysCount }: { task: Task, gridStartDate
   return (
     <div 
       className={cn(
-        "absolute h-6 rounded-lg flex items-center px-2 shadow-lg transition-all hover:scale-[1.02] hover:shadow-indigo-500/20",
-        task.status === 'done' ? "bg-zinc-700/50 opacity-40" : "bg-gradient-to-r from-indigo-600 to-indigo-500 border border-white/10"
+        "absolute h-6 rounded-lg flex items-center px-2 shadow-lg transition-all hover:scale-[1.02] hover:shadow-primary/20",
+        task.status === 'done' ? "bg-muted text-muted-foreground/40" : "bg-primary text-primary-foreground border border-white/10"
       )}
       style={{ left, width }}
     >
-      <span className="text-[9px] font-bold text-white truncate drop-shadow-sm">
+      <span className="text-[9px] font-bold truncate drop-shadow-sm">
         {task.title}
       </span>
     </div>

@@ -63,18 +63,18 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Header */}
-      <header className="border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-md sticky top-0 z-10">
+      <header className="border-b border-border bg-background/50 backdrop-blur-md sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-zinc-100">
-              <Sparkles className="h-5 w-5 text-zinc-950" />
+            <div className="p-1.5 rounded-lg bg-primary">
+              <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
             <span className="font-bold text-xl tracking-tight">TaskForge</span>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={logout} className="text-zinc-400 hover:text-zinc-100">
+            <Button variant="ghost" size="sm" onClick={logout} className="text-muted-foreground hover:text-foreground">
               <LogOut className="h-4 w-4 mr-2" />
               ログアウト
             </Button>
@@ -90,15 +90,15 @@ export default function DashboardPage() {
           </div>
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-zinc-100 text-zinc-950 hover:bg-zinc-200 shadow-lg shadow-zinc-100/10 transition-all font-semibold">
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/10 transition-all font-semibold rounded-xl">
                 <Plus className="h-4 w-4 mr-2" />
                 新規プロジェクト
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-100">
+            <DialogContent className="bg-card border-border text-foreground">
               <DialogHeader>
                 <DialogTitle>新規プロジェクト作成</DialogTitle>
-                <DialogDescription className="text-zinc-400">
+                <DialogDescription className="text-muted-foreground">
                   プロジェクト名を入力して開始しましょう。
                 </DialogDescription>
               </DialogHeader>
@@ -110,7 +110,7 @@ export default function DashboardPage() {
                     placeholder="例: 次世代アプリ開発" 
                     value={newProjectName}
                     onChange={(e) => setNewProjectName(e.target.value)}
-                    className="bg-zinc-800 border-zinc-700 text-zinc-100 focus:ring-zinc-600"
+                    className="bg-background border-border text-foreground focus:ring-primary/20"
                   />
                 </div>
               </div>
@@ -118,7 +118,7 @@ export default function DashboardPage() {
                 <Button variant="ghost" onClick={() => setIsCreateModalOpen(false)}>キャンセル</Button>
                 <Button 
                   onClick={handleCreateProject}
-                  className="bg-zinc-100 text-zinc-950 hover:bg-zinc-200"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 transition-all font-semibold rounded-xl"
                   disabled={createMutation.isPending || !newProjectName.trim()}
                 >
                   {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -136,10 +136,10 @@ export default function DashboardPage() {
             ))}
           </div>
         ) : projects?.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-zinc-900/40 rounded-3xl border border-zinc-800 border-dashed">
-            <FolderKanban className="h-12 w-12 text-zinc-700 mb-4" />
-            <p className="text-zinc-400 text-lg">プロジェクトがまだありません</p>
-            <Button variant="link" className="text-zinc-300" onClick={() => setIsCreateModalOpen(true)}>
+          <div className="flex flex-col items-center justify-center py-20 bg-secondary/30 rounded-3xl border border-border border-dashed">
+            <FolderKanban className="h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-muted-foreground text-lg">プロジェクトがまだありません</p>
+            <Button variant="link" className="text-primary hover:text-primary/80" onClick={() => setIsCreateModalOpen(true)}>
               最初のプロジェクトを作成する
             </Button>
           </div>
@@ -148,17 +148,17 @@ export default function DashboardPage() {
             {projects?.map((project) => (
               <Card 
                 key={project.id} 
-                className="group cursor-pointer bg-zinc-900/50 border-zinc-800 hover:border-zinc-700 transition-all hover:translate-y-[-2px] overflow-hidden"
+                className="group cursor-pointer bg-card hover:bg-secondary/50 border-border hover:border-primary/20 transition-all hover:translate-y-[-2px] overflow-hidden shadow-sm hover:shadow-md"
                 onClick={() => router.push(`/projects/${project.id}`)}
               >
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-xl group-hover:text-zinc-100 transition-colors">
+                    <CardTitle className="text-xl group-hover:text-primary transition-colors">
                       {project.name}
                     </CardTitle>
-                    <ChevronRight className="h-5 w-5 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+                    <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
-                  <CardDescription className="text-zinc-500 line-clamp-2 mt-2">
+                  <CardDescription className="text-muted-foreground line-clamp-2 mt-2">
                     {project.description || '説明なし'}
                   </CardDescription>
                 </CardHeader>

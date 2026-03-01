@@ -113,15 +113,15 @@ export function KanbanBoard({ tasks, projectId, sprints, onTaskUpdate, onTaskCli
 
 function KanbanColumn({ id, title, tasks, sprints, onTaskClick }: { id: string; title: string; tasks: Task[]; sprints: Sprint[]; onTaskClick: (task: Task) => void }) {
   return (
-    <div className="flex flex-col gap-4 bg-zinc-900/30 p-4 rounded-2xl border border-zinc-800/50 min-h-[500px]">
+    <div className="flex flex-col gap-4 bg-secondary/30 p-4 rounded-2xl border border-border min-h-[500px]">
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-zinc-200">{title}</h3>
-          <Badge variant="secondary" className="bg-zinc-800 text-zinc-400 border-none px-1.5 h-5 min-w-5 flex justify-center">
+          <h3 className="font-semibold text-foreground/80">{title}</h3>
+          <Badge variant="secondary" className="bg-secondary text-muted-foreground border-none px-1.5 h-5 min-w-5 flex justify-center">
             {tasks.length}
           </Badge>
         </div>
-        <button className="text-zinc-600 hover:text-zinc-400 transition-colors">
+        <button className="text-muted-foreground hover:text-foreground transition-colors">
           <MoreHorizontal className="h-4 w-4" />
         </button>
       </div>
@@ -174,8 +174,8 @@ function TaskCard({ task, sprintName, isDragging, onClick }: { task: Task; sprin
       ref={setNodeRef}
       style={style}
       className={cn(
-        "bg-zinc-900 border-zinc-800 p-4 hover:border-zinc-700 transition-all cursor-default select-none group",
-        isDragging && "opacity-50 ring-2 ring-zinc-500 border-zinc-500 shadow-2xl"
+        "bg-card border-border p-4 hover:border-primary/20 transition-all cursor-default select-none group shadow-sm hover:shadow-md",
+        isDragging && "opacity-50 ring-2 ring-primary/20 border-primary shadow-2xl"
       )}
       onClick={onClick}
     >
@@ -189,27 +189,27 @@ function TaskCard({ task, sprintName, isDragging, onClick }: { task: Task; sprin
               {sprintName}
             </Badge>
           )}
-          <div {...attributes} {...listeners} className="text-zinc-700 hover:text-zinc-500 cursor-grab active:cursor-grabbing">
+          <div {...attributes} {...listeners} className="text-muted-foreground/30 hover:text-muted-foreground/60 cursor-grab active:cursor-grabbing">
             <GripVertical className="h-4 w-4" />
           </div>
         </div>
         
-        <h4 className="text-zinc-100 font-medium leading-tight group-hover:text-white transition-colors">
+        <h4 className="text-foreground font-medium leading-tight group-hover:text-primary transition-colors">
           {task.title}
         </h4>
         
         {task.description && (
-          <p className="text-zinc-500 text-xs line-clamp-2">
+          <p className="text-muted-foreground text-xs line-clamp-2">
             {task.description}
           </p>
         )}
 
         {task.estimate && (
           <div className="flex items-center gap-1.5 mt-1">
-            <div className="w-full bg-zinc-800 rounded-full h-1.5">
-               <div className="bg-zinc-600 h-1.5 rounded-full" style={{ width: '40%' }} />
+            <div className="w-full bg-secondary rounded-full h-1.5">
+               <div className="bg-primary/40 h-1.5 rounded-full" style={{ width: '40%' }} />
             </div>
-            <span className="text-[10px] text-zinc-500 font-mono">{task.estimate}h</span>
+            <span className="text-[10px] text-muted-foreground font-mono">{task.estimate}h</span>
           </div>
         )}
       </div>
