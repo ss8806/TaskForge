@@ -1,0 +1,7 @@
+# 開発ルール (Skills)
+- **環境構築**: Pythonは `uv` または `venv` を使用。ターミナルコマンドで自律的に環境を作成すること。
+- **DB連携**: `postgres` MCPを使用してスキーマを確認し、SQLAlchemy/SQLModelの定義を自動生成すること。
+- **API設計**: FastAPIでは必ず Pydantic モデルでバリデーションを行い、型安全を保つこと。
+- **フロント連携**: Next.js (App Router) を優先。API URLは環境変数で管理すること。
+- **テスト**: `fetch` MCP または `curl` を使い、エンドポイント作成直後に必ず疎通確認を行うこと。
+- **思考プロセス**: 複雑な設計変更前には `sequential-thinking` を実行し、影響範囲を特定すること。
