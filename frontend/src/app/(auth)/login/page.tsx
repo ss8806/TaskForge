@@ -47,10 +47,10 @@ export default function LoginPage() {
     setError(null);
     try {
       const response = await authApi.login(data.email, data.password);
-      setToken(response.data.access_token);
+      setToken(response.access_token);
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'ログインに失敗しました');
+      setError(err.message || 'ログインに失敗しました');
     } finally {
       setIsLoading(false);
     }

@@ -52,10 +52,10 @@ export default function RegisterPage() {
     setError(null);
     try {
       const response = await authApi.register(data.email, data.password);
-      setToken(response.data.access_token);
+      setToken(response.access_token);
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.detail || '登録に失敗しました');
+      setError(err.message || '登録に失敗しました');
     } finally {
       setIsLoading(false);
     }

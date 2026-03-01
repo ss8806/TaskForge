@@ -54,17 +54,17 @@ export default function ProjectPage() {
 
   const { data: project, isLoading: isProjectLoading } = useQuery({
     queryKey: ['projects', projectId],
-    queryFn: () => projectsApi.get(projectId).then((res) => res.data),
+    queryFn: () => projectsApi.get(projectId),
   });
 
   const { data: tasks, isLoading: isTasksLoading } = useQuery({
     queryKey: ['projects', projectId, 'tasks'],
-    queryFn: () => tasksApi.list(projectId).then((res) => res.data),
+    queryFn: () => tasksApi.list(projectId),
   });
 
   const { data: sprints } = useQuery({
     queryKey: ['projects', projectId, 'sprints'],
-    queryFn: () => sprintsApi.list(projectId).then((res: any) => res.data),
+    queryFn: () => sprintsApi.list(projectId),
   });
 
   const updateTaskMutation = useMutation({
