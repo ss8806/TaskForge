@@ -1,0 +1,27 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agents": {
+    // 司令塔（軍師）：DeepSeek の推論モデルを使用
+    "plan": {
+      "model": "deepseek/deepseek-reasoner", // 思考力に特化したモデル
+      "mode": "primary",
+      "permissions": {
+        "file_edits": "ask", // 勝手に書き換えないよう確認を入れる
+        "bash": "ask"
+      }
+    },
+    // 実行役（兵隊）：DeepSeek の高速コーディングモデルを使用
+    "build": {
+      "model": "deepseek/deepseek-chat", // 速度と正確性のバランスが良いモデル
+      "mode": "primary",
+      "permissions": {
+        "file_edits": "allow", // ガシガシ書き換えを許可
+        "bash": "allow"
+      }
+    }
+  },
+  "subagents": {
+    // 雑用係：すべて DeepSeek で統一
+    "defaultModel": "deepseek/deepseek-chat"
+  }
+}
