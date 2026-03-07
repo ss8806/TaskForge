@@ -9,7 +9,9 @@ from app.models import User
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED
+)
 def register(body: RegisterRequest, session: SessionDep):
     # 重複チェック
     existing = session.exec(select(User).where(User.email == body.email)).first()
@@ -22,17 +24,10 @@ def register(body: RegisterRequest, session: SessionDep):
     session.add(user)
     session.commit()
     session.refresh(user)
-    token = create_access_token(subject=user.id, email=user.email, role=user.role)
-    return TokenResponse(access_token=token)
-
-
-@router.post("/login", response_model=TokenResponse)
-def login(body: LoginRequest, session: SessionDep):
-    user = session.exec(select(User).where(User.email == body.email)).first()
-    if not user or not verify_password(body.password, user.password_hash):
+    # user.id is guaranteed to be int after commit and refresh
+    if user.id is None:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="User ID is None"
         )
-    token = create_access_token(subject=user.id, email=user.email, role=user.role)
+    token = create_access_token(subject=user.id, email=user.email, role=user.role)  # type: ignore
     return TokenResponse(access_token=token)

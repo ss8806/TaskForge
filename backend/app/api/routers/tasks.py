@@ -4,35 +4,27 @@ from typing import List
 from fastapi import APIRouter, HTTPException, status
 from sqlmodel import select
 
-from app.api.dependencies import CurrentUserIdDep, SessionDep
+from app.api.dependencies import CurrentUserDep, SessionDep, verify_project_access
 from app.api.schemas import TaskCreate, TaskResponse, TaskUpdate
-from app.models import Project, Task
+from app.models import Task
 
 router = APIRouter(tags=["tasks"])
 
 
-def _verify_project_access(project_id: int, user_id: int, session) -> Project:
-    project = session.get(Project, project_id)
-    if not project:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
-    if project.owner_id != user_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
-    return project
-
-
 # ── プロジェクト配下のタスクCRUD ─────────────────────────────────────────────
+
 
 @router.get("/projects/{project_id}/tasks", response_model=List[TaskResponse])
 def list_tasks(
     project_id: int,
     session: SessionDep,
-    current_user_id: CurrentUserIdDep,
+    current_user: CurrentUserDep,
     limit: int = 100,
     offset: int = 0,
     status: str | None = None,
     sprint_id: int | None = None,
 ):
-    _verify_project_access(project_id, current_user_id, session)
+    verify_project_access(project_id, current_user, session)
     query = select(Task).where(Task.project_id == project_id)
     if status is not None:
         query = query.where(Task.status == status)
@@ -52,9 +44,9 @@ def create_task(
     project_id: int,
     body: TaskCreate,
     session: SessionDep,
-    current_user_id: CurrentUserIdDep,
+    current_user: CurrentUserDep,
 ):
-    _verify_project_access(project_id, current_user_id, session)
+    verify_project_access(project_id, current_user, session)
     task = Task(project_id=project_id, **body.model_dump())
     session.add(task)
     session.commit()
@@ -64,17 +56,20 @@ def create_task(
 
 # ── 個別タスク操作 ────────────────────────────────────────────────────────────
 
+
 @router.put("/tasks/{task_id}", response_model=TaskResponse)
 def update_task(
     task_id: int,
     body: TaskUpdate,
     session: SessionDep,
-    current_user_id: CurrentUserIdDep,
+    current_user: CurrentUserDep,
 ):
     task = session.get(Task, task_id)
     if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
-    _verify_project_access(task.project_id, current_user_id, session)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+        )
+    verify_project_access(task.project_id, current_user, session)
 
     update_data = body.model_dump(exclude_unset=True)
     for key, value in update_data.items():
@@ -91,11 +86,13 @@ def update_task(
 def delete_task(
     task_id: int,
     session: SessionDep,
-    current_user_id: CurrentUserIdDep,
+    current_user: CurrentUserDep,
 ):
     task = session.get(Task, task_id)
     if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
-    _verify_project_access(task.project_id, current_user_id, session)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+        )
+    verify_project_access(task.project_id, current_user, session)
     session.delete(task)
     session.commit()

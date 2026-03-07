@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 
 from app.core.security import decode_access_token
 from app.db.session import get_session
-from app.models import User
+from app.models import User, Project
 
 # Reexport for convenience
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -59,8 +59,7 @@ def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
         )
-    # JWTペイロードからロール情報を設定（DBのロールと一致することを確認）
-    user.role = payload.get("role", "user")
+
     return user
 
 
@@ -81,3 +80,19 @@ def require_admin(user: CurrentUserDep) -> User:
 
 
 AdminDep = Annotated[User, Depends(require_admin)]
+
+
+def verify_project_access(project_id: int, user: User, session: Session) -> Project:
+    """
+    プロジェクトへのアクセス権限を確認
+    """
+    project = session.get(Project, project_id)
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
+        )
+    if project.owner_id != user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized"
+        )
+    return project
