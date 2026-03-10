@@ -1,0 +1,112 @@
+projects = { "/Users/ss/Dev/tks_report_maker" = { trust_level = "trusted" } }
+model = "deepseek/deepseek-reasoner"
+model_reasoning_effort = "medium"
+personality = "pragmatic"
+
+# Enhanced MCP server configuration for TKS Report Maker development
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp@latest"]
+enabled = true
+
+[mcp_servers.sequential-thinking]
+timeout = 60
+type = "stdio"
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+enabled = true
+
+[mcp_servers.puppeteer]
+timeout = 60
+type = "stdio"
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-puppeteer"]
+enabled = true
+
+[mcp_servers.docker]
+timeout = 60
+type = "stdio"
+command = "npx"
+args = ["-y", "mcp-server-docker"]
+enabled = true
+
+[mcp_servers.docker.env]
+DOCKER_HOST = "unix:///var/run/docker.sock"
+
+[mcp_servers.filesystem]
+timeout = 60
+type = "stdio"
+command = "npx"
+args = [
+  "-y",
+  "@modelcontextprotocol/server-filesystem",
+  "/Users/ss/Dev/tks_report_maker"
+]
+enabled = true
+
+[mcp_servers.next-devtools]
+timeout = 60
+type = "stdio"
+command = "npx"
+args = ["-y", "next-devtools-mcp@latest"]
+enabled = true
+
+[mcp_servers.postgres]
+timeout = 60
+type = "stdio"
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-postgres"]
+enabled = true
+
+[mcp_servers.postgres.env]
+PGHOST = "localhost"
+PGPORT = "5432"
+PGDATABASE = "database_name"
+PGUSER = "username"
+PGPASSWORD = "password"
+
+[mcp_servers.github]
+timeout = 60
+type = "stdio"
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-github"]
+enabled = true
+
+[mcp_servers.git]
+timeout = 60
+type = "stdio"
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-git"]
+enabled = true
+
+# Development workflow servers
+[mcp_servers.uv]
+timeout = 60
+type = "stdio"
+command = "bash"
+args = ["-c", "cd /Users/ss/Dev/tks_report_maker && uv --version && echo 'UV MCP server ready for TKS Report Maker' && exec tail -f /dev/null"]
+enabled = true
+
+[mcp_servers.tauri]
+timeout = 60
+type = "stdio"
+command = "bash"
+args = ["-c", "cd /Users/ss/Dev/tks_report_maker && npx @tauri-apps/cli --version && echo 'Tauri MCP server ready for TKS Report Maker' && exec tail -f /dev/null"]
+enabled = true
+
+# Security scanning servers (placeholder for future integration)
+[mcp_servers.security-scan]
+timeout = 60
+type = "stdio"
+command = "bash"
+args = ["-c", "echo 'Security scanning MCP server for TKS Report Maker - Use bandit, npm audit, etc.' && exec tail -f /dev/null"]
+enabled = true
+
+# Performance monitoring servers (placeholder for future integration)
+[mcp_servers.performance]
+timeout = 60
+type = "stdio"
+command = "bash"
+args = ["-c", "echo 'Performance monitoring MCP server for TKS Report Maker' && exec tail -f /dev/null"]
+enabled = true

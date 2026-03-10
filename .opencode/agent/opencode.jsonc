@@ -1,27 +1,145 @@
 {
+  // TKS Report Maker Agent Team configuration
+  // Simplified 4-agent architecture for efficient collaboration
   "$schema": "https://opencode.ai/config.json",
+  "version": "3.0",
+  "name": "TKS Report Maker Agent Team",
+  "description": "4-agent multi-agent system for FastAPI + Next.js + Tauri development",
   "agents": {
-    // 司令塔（軍師）：DeepSeek の推論モデルを使用
-    "plan": {
-      "model": "deepseek/deepseek-reasoner", // 思考力に特化したモデル
+    "orchestrator": {
+      "model": "zai-coding-plan/glm-4.7",
       "mode": "primary",
+      "description": "Global workflow coordination and task routing",
       "permissions": {
-        "file_edits": "ask", // 勝手に書き換えないよう確認を入れる
-        "bash": "ask"
-      }
+        "file_edits": "ask",
+        "bash": "ask",
+        "task_management": "allow"
+      },
+      "tools": [
+        "read",
+        "grep",
+        "glob",
+        "todowrite",
+        "task",
+        "bash",
+        "edit"
+      ]
     },
-    // 実行役（兵隊）：DeepSeek の高速コーディングモデルを使用
-    "build": {
-      "model": "deepseek/deepseek-chat", // 速度と正確性のバランスが良いモデル
+    "reasoner": {
+      "model": "deepseek/deepseek-reasoner",
       "mode": "primary",
+      "description": "System design, reasoning, and analysis specialist",
       "permissions": {
-        "file_edits": "allow", // ガシガシ書き換えを許可
+        "file_edits": "allow",
         "bash": "allow"
-      }
+      },
+      "tools": [
+        "read",
+        "grep",
+        "glob",
+        "bash",
+        "task",
+        "edit"
+      ]
+    },
+    "implementer": {
+      "model": "deepseek/deepseek-chat",
+      "mode": "primary",
+      "description": "Full-stack implementation and operations specialist",
+      "permissions": {
+        "file_edits": "allow",
+        "bash": "allow",
+        "git": "readonly"
+      },
+      "tools": [
+        "read",
+        "write",
+        "edit",
+        "grep",
+        "bash",
+        "task"
+      ]
+    },
+    "verifier": {
+      "model": "deepseek/deepseek-reasoner",
+      "mode": "primary",
+      "description": "Quality assurance and verification specialist",
+      "permissions": {
+        "file_edits": "ask",
+        "bash": "allow"
+      },
+      "tools": [
+        "read",
+        "grep",
+        "bash",
+        "task",
+        "edit",
+        "glob"
+      ]
     }
   },
-  "subagents": {
-    // 雑用係：すべて DeepSeek で統一
-    "defaultModel": "deepseek/deepseek-chat"
+  "workflows": {
+    "feature_development": {
+      "trigger": "feature_request",
+      "agents": [
+        "orchestrator",
+        "reasoner",
+        "implementer",
+        "verifier"
+      ],
+      "priority": "medium",
+      "description": "Design and implement new features"
+    },
+    "code_review": {
+      "trigger": "pull_request",
+      "agents": [
+        "orchestrator",
+        "verifier"
+      ],
+      "priority": "high",
+      "description": "Review and validate code changes"
+    },
+    "bug_fix": {
+      "trigger": "test_failure",
+      "agents": [
+        "orchestrator",
+        "verifier",
+        "implementer"
+      ],
+      "priority": "high",
+      "description": "Investigate and fix bugs"
+    },
+    "performance_optimization": {
+      "trigger": "performance_issue",
+      "agents": [
+        "orchestrator",
+        "reasoner",
+        "implementer",
+        "verifier"
+      ],
+      "priority": "high",
+      "description": "Analyze and optimize performance"
+    },
+    "deployment": {
+      "trigger": "release",
+      "agents": [
+        "orchestrator",
+        "implementer",
+        "verifier"
+      ],
+      "priority": "high",
+      "description": "Build and deploy releases"
+    }
+  },
+  "tool_configurations": {
+    "git_safety": {
+      "prevent_force_push": true,
+      "require_review_for_main": true,
+      "block_secrets_commit": true
+    },
+    "environment_protection": {
+      "restrict_env_access": true,
+      "mask_sensitive_data": true
+    }
   }
 }
