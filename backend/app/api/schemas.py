@@ -126,3 +126,50 @@ class AIDecompositionItem(BaseModel):
 
 class AIDecompositionResponse(BaseModel):
     tasks: list[AIDecompositionItem]
+
+
+# ── Points & Achievements schemas ────────────────────────────────────────────
+
+class AchievementResponse(BaseModel):
+    id: int
+    key: str
+    title: str
+    description: str
+    points: int
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class UserAchievementResponse(BaseModel):
+    id: int
+    achievement_id: int
+    unlocked_at: datetime
+    achievement: AchievementResponse
+
+    model_config = {"from_attributes": True}
+
+
+class PointsHistoryResponse(BaseModel):
+    id: int
+    points: int
+    reason: str
+    task_id: Optional[int]
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class UserPointsResponse(BaseModel):
+    user_id: int
+    total_points: int
+    achievements: list[UserAchievementResponse]
+    points_history: list[PointsHistoryResponse]
+
+    model_config = {"from_attributes": True}
+
+
+class AddPointsRequest(BaseModel):
+    points: int
+    reason: str
+    task_id: Optional[int] = None

@@ -12,26 +12,24 @@ AI搭載のインテリジェント・プロジェクト管理アプリケーシ
 
 ---
 
-## 🏆️ システムアーキテクチャ (NEW)
+## 🏆️ ポイントシステム
 
-This project now uses a points and achievements system to increase engagement.
+このプロジェクトでは、ポイントと実績システムを使用してエンゲージメントを高めます。
 
-### How it works
-- Users earn points for completing tasks (commits, code reviews, etc.).
-- Achievements are unlocked when reaching certain point milestones.
-- Leaderboard tracks top contributors.
+### 動作方法
+- ユーザーはタスク（コミット、コードレビューなど）を完了するとポイントを獲得します。
+- 特定のポイントマイルストーンに達すると実績が解除ロックされます。
+- リーダーボードはトップ貢献者を追跡します。
 
-### Data Structure
-Points and achievements are stored in `points.json`.
+### 実績一覧
+- **初回コミット (First Commit)**: 100 ポイント
+- **バグハンター (Bug Hunter)**: 50 ポイント
+- **レポクリーナー (Repo Cleaner)**: 30 ポイント
 
-### 🏆️ 実績手順
-- **初回コミット (First Commit)**: 100 points
-- **バグハンター (Bug Hunter)**: 50 points
-- **レポクリーナー (Repo Cleaner)**: 30 points
-
-### Future Improvements
-- Add a leaderboard API endpoint.
-- Visual badges (e.g., GitHub-style badges).
+### 今後の改善
+- リーダーボードAPIエンドポイントを追加
+- ビジュアルバッジ（GitHubスタイルのバッジなど）を追加
+- ポイントと実績のデータベース移行
 
 プロジェクトを起動するには、インフラ、バックエンド、フロントエンドの3つを順に起動する必要があります。
 
@@ -85,26 +83,6 @@ npm run dev
 ---
 
 ## 📁 ディレクトリ構成
-
-## 🏆️ システムアーキテクチャ (NEW)
-このプロジェクトでは、ポイントと実績システムを使用してエンゲージメントを高めます。
-
-### 動動方法
-- ユーザーはタスク（コミット、コードレビューなど）を完了するとポイントを獲得します。
-- 特定のポイントマイルストーンに達すると実績が解除ロックされます。
-- リーダーボードはトップ貢献者を追跡します。
-
-### データ構造
-ポイントと実績は `points.json` に保存されます。
-
-### 🏆️ 実績手順
-- **初回コミット (First Commit)**: 100 ポイント
-- **バグハンター (Bug Hunter)**: 50 ポイント
-- **レポクリーナー (Repo Cleaner)**: 30 ポイント
-
-### 今後の改善
-- リーダーボードAPIエンドポイントを追加します。
-- ビジュアルバッジ（GitHubスタイルのバッジなど）を追加します。
 
 - `frontend/`: Next.js アプリケーション
 - `backend/`: FastAPI アプリケーション

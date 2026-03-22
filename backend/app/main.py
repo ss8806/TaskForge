@@ -5,7 +5,7 @@ from fastapi_mcp import FastApiMCP
 from sqlmodel import Session, select
 
 from app.core.redis import close_redis, init_redis
-from app.api.routers import auth, projects, tasks, sprints, ai, admin
+from app.api.routers import auth, points, projects, tasks, sprints, ai, admin
 from app.db.session import engine, get_session
 from app.models import Project, Task
 
@@ -61,6 +61,7 @@ app.include_router(projects.router, prefix="/api")
 app.include_router(tasks.router, prefix="/api")
 app.include_router(sprints.router, prefix="/api")
 app.include_router(ai.router, prefix="/api")
+app.include_router(points.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 
 @app.get("/health")
