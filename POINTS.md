@@ -1,15 +1,20 @@
-# Points System
+# 🏆️ システムアーキテクチャ
 
-This project uses a simple points and achievements system to increase engagement.
+このプロジェクトでは、ポイントと実績システムを使用してエンゲージメントを高めます。
 
-## How it works
-- Users earn points for completing tasks (commits, code reviews, etc.).
-- Achievements are unlocked when reaching certain point milestones.
-- Leaderboard tracks top contributors.
+## 動動方法
+- ユーザーはタスク（コミット、コードレビューなど）を完了するとポイントを獲得します。
+- 特定のポイントマイルストーンに達すると実績が解除ロックされます。
+- リーダーボードはトップ貢献者を追跡します。
 
-## Data Structure
-Points and achievements are stored in `points.json`.
+## データ構造
+ポイントと実績は `points.json` に保存されます。
 
-## Future Improvements
-- Add a leaderboard API endpoint.
-- Visual badges (e.g., GitHub-style badges).
+## 🏆️ 実績手順
+- **初回コミット (First Commit)**: 100 ポイント
+- **バグハンター (Bug Hunter)**: 50 ポイント
+- **レポクリーナー (Repo Cleaner)**: 30 ポイント
+
+## 今後の改善
+- リーダーボードAPIエンドポイントを追加します。
+- ビジュアルバッジ（GitHubスタイルのバッジなど）を追加します。
