@@ -12,7 +12,26 @@ AI搭載のインテリジェント・プロジェクト管理アプリケーシ
 
 ---
 
-## 🚀 実行手順
+## 🏆️ システムアーキテクチャ (NEW)
+
+This project now uses a points and achievements system to increase engagement.
+
+### How it works
+- Users earn points for completing tasks (commits, code reviews, etc.).
+- Achievements are unlocked when reaching certain point milestones.
+- Leaderboard tracks top contributors.
+
+### Data Structure
+Points and achievements are stored in `points.json`.
+
+### 🏆️ 実績手順
+- **初回コミット (First Commit)**: 100 points
+- **バグハンター (Bug Hunter)**: 50 points
+- **レポクリーナー (Repo Cleaner)**: 30 points
+
+### Future Improvements
+- Add a leaderboard API endpoint.
+- Visual badges (e.g., GitHub-style badges).
 
 プロジェクトを起動するには、インフラ、バックエンド、フロントエンドの3つを順に起動する必要があります。
 

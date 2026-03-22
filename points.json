@@ -1,0 +1,22 @@
+{
+  "users": {},
+  "tasks": {},
+  "achievements": {
+    "first_commit": {
+      "title": "First Commit",
+      "description": "Created your first git commit.",
+      "points": 100
+    },
+    "bug_hunter": {
+      "title": "Bug Hunter",
+      "description": "Reported and fixed your first bug.",
+      "points": 50
+    },
+    "cleaner": {
+      "title": "Repo Cleaner",
+      "description": "Cleaned up untracked files.",
+      "points": 30
+    }
+  },
+  "leaderboard": []
+}
