@@ -46,11 +46,16 @@ def create_task(
     session: SessionDep,
     current_user: CurrentUserDep,
 ):
+    """タスク作成"""
     verify_project_access(project_id, current_user, session)
     task = Task(project_id=project_id, **body.model_dump())
-    session.add(task)
-    session.commit()
-    session.refresh(task)
+    try:
+        session.add(task)
+        session.commit()
+        session.refresh(task)
+    except Exception:
+        session.rollback()
+        raise
     return task
 
 
@@ -64,6 +69,7 @@ def update_task(
     session: SessionDep,
     current_user: CurrentUserDep,
 ):
+    """タスク更新"""
     task = session.get(Task, task_id)
     if not task:
         raise HTTPException(
@@ -76,9 +82,13 @@ def update_task(
         setattr(task, key, value)
     task.updated_at = datetime.now(timezone.utc)
 
-    session.add(task)
-    session.commit()
-    session.refresh(task)
+    try:
+        session.add(task)
+        session.commit()
+        session.refresh(task)
+    except Exception:
+        session.rollback()
+        raise
     return task
 
 
@@ -88,11 +98,16 @@ def delete_task(
     session: SessionDep,
     current_user: CurrentUserDep,
 ):
+    """タスク削除"""
     task = session.get(Task, task_id)
     if not task:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
         )
     verify_project_access(task.project_id, current_user, session)
-    session.delete(task)
-    session.commit()
+    try:
+        session.delete(task)
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise

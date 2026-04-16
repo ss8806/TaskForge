@@ -33,14 +33,19 @@ def create_project(
     session: SessionDep,
     current_user: CurrentUserDep,
 ):
+    """プロジェクト作成"""
     project = Project(
         name=body.name,
         description=body.description,
         owner_id=current_user.id,
     )
-    session.add(project)
-    session.commit()
-    session.refresh(project)
+    try:
+        session.add(project)
+        session.commit()
+        session.refresh(project)
+    except Exception:
+        session.rollback()
+        raise
     return project
 
 
@@ -68,6 +73,7 @@ def delete_project(
     session: SessionDep,
     current_user: CurrentUserDep,
 ):
+    """プロジェクト削除"""
     project = session.get(Project, project_id)
     if not project:
         raise HTTPException(
@@ -77,5 +83,9 @@ def delete_project(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized"
         )
-    session.delete(project)
-    session.commit()
+    try:
+        session.delete(project)
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise

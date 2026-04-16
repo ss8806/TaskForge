@@ -39,11 +39,16 @@ def create_sprint(
     session: SessionDep,
     current_user: CurrentUserDep,
 ):
+    """スプリント作成"""
     verify_project_access(project_id, current_user, session)
     sprint = Sprint(project_id=project_id, **body.model_dump())
-    session.add(sprint)
-    session.commit()
-    session.refresh(sprint)
+    try:
+        session.add(sprint)
+        session.commit()
+        session.refresh(sprint)
+    except Exception:
+        session.rollback()
+        raise
     return sprint
 
 
@@ -57,14 +62,19 @@ def delete_sprint(
     session: SessionDep,
     current_user: CurrentUserDep,
 ):
+    """スプリント削除"""
     verify_project_access(project_id, current_user, session)
     sprint = session.get(Sprint, sprint_id)
     if not sprint or sprint.project_id != project_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Sprint not found"
         )
-    session.delete(sprint)
-    session.commit()
+    try:
+        session.delete(sprint)
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
 
 
 @router.put(
@@ -78,6 +88,7 @@ def update_sprint(
     session: SessionDep,
     current_user: CurrentUserDep,
 ):
+    """スプリント更新"""
     verify_project_access(project_id, current_user, session)
     sprint = session.get(Sprint, sprint_id)
     if not sprint or sprint.project_id != project_id:
@@ -89,7 +100,11 @@ def update_sprint(
     for key, value in update_data.items():
         setattr(sprint, key, value)
 
-    session.add(sprint)
-    session.commit()
-    session.refresh(sprint)
+    try:
+        session.add(sprint)
+        session.commit()
+        session.refresh(sprint)
+    except Exception:
+        session.rollback()
+        raise
     return sprint
