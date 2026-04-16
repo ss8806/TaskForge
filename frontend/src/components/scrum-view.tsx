@@ -1,0 +1,271 @@
+'use client';
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { tasksApi, sprintsApi } from '@/lib/api';
+import { Task, Sprint, TaskStatus } from '@/types';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  ChevronRight, 
+  ChevronDown, 
+  Layout, 
+  ListTodo, 
+  Calendar,
+  MoreVertical,
+  CheckCircle2,
+  Circle,
+  Clock
+} from 'lucide-react';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+
+interface ScrumViewProps {
+  projectId: number;
+  onTaskClick: (task: Task) => void;
+}
+
+export function ScrumView({ projectId, onTaskClick }: ScrumViewProps) {
+  const queryClient = useQueryClient();
+  const [expandedSprints, setExpandedSprints] = useState<Record<number, boolean>>({});
+
+  const { data: sprints, isLoading: isSprintsLoading } = useQuery({
+    queryKey: ['projects', projectId, 'sprints'],
+    queryFn: () => sprintsApi.list(projectId)/* .then((res) => res.data) */,
+  });
+
+  const { data: tasks, isLoading: isTasksLoading } = useQuery({
+    queryKey: ['projects', projectId, 'tasks'],
+    queryFn: () => tasksApi.list(projectId)/* .then((res) => res.data) */,
+  });
+
+  const updateTaskMutation = useMutation({
+    mutationFn: ({ taskId, data }: { taskId: number; data: any }) =>
+      tasksApi.update(taskId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'tasks'] });
+    },
+  });
+
+  const toggleSprint = (sprintId: number) => {
+    setExpandedSprints(prev => ({
+      ...prev,
+      [sprintId]: !prev[sprintId]
+    }));
+  };
+
+  if (isSprintsLoading || isTasksLoading) {
+    return <div className="space-y-4">
+      {[1, 2, 3].map(i => <div key={i} className="h-20 bg-secondary/50 rounded-xl animate-pulse" />)}
+    </div>;
+  }
+
+  const backlogTasks = tasks?.filter(t => t.sprint_id === null) || [];
+  
+  return (
+    <div className="flex flex-col gap-8">
+      {/* Sprints Sections */}
+      <div className="space-y-4">
+        <h3 className="text-muted-foreground text-sm font-medium uppercase tracking-wider px-2">アクティブ & 将来のスプリント</h3>
+        {sprints?.length === 0 ? (
+          <div className="text-center py-10 bg-secondary/30 rounded-2xl border border-dashed border-border text-muted-foreground">
+            スプリントがまだ作成されていません。
+          </div>
+        ) : (
+          sprints?.map(sprint => (
+            <SprintSection 
+              key={sprint.id} 
+              sprint={sprint} 
+              tasks={tasks?.filter(t => t.sprint_id === sprint.id) || []}
+              isExpanded={expandedSprints[sprint.id] ?? true}
+              onToggle={() => toggleSprint(sprint.id)}
+              onTaskClick={onTaskClick}
+              onMoveToBacklog={(taskId) => updateTaskMutation.mutate({ taskId, data: { sprint_id: null } })}
+            />
+          ))
+        )}
+      </div>
+
+      {/* Backlog Section */}
+      <div className="space-y-4">
+        <h3 className="text-muted-foreground text-sm font-medium uppercase tracking-wider px-2">プロダクトバックログ</h3>
+        <div className="bg-secondary/30 rounded-2xl border border-border p-4">
+          {backlogTasks.length === 0 ? (
+            <div className="text-center py-6 text-muted-foreground text-sm">
+              バックログにタスクはありません
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {backlogTasks.map(task => (
+                <BacklogTaskCard 
+                  key={task.id} 
+                  task={task} 
+                  onTaskClick={() => onTaskClick(task)}
+                  sprints={sprints || []}
+                  onAssignSprint={(sprintId) => updateTaskMutation.mutate({ taskId: task.id, data: { sprint_id: sprintId } })}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SprintSection({ 
+  sprint, 
+  tasks, 
+  isExpanded, 
+  onToggle,
+  onTaskClick,
+  onMoveToBacklog 
+}: { 
+  sprint: Sprint; 
+  tasks: Task[]; 
+  isExpanded: boolean; 
+  onToggle: () => void;
+  onTaskClick: (task: Task) => void;
+  onMoveToBacklog: (taskId: number) => void;
+}) {
+  const completedTasks = tasks.filter(t => t.status === 'done').length;
+  const progress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
+
+  return (
+    <div className="bg-card border border-border rounded-2xl overflow-hidden transition-all hover:border-primary/20 shadow-sm hover:shadow-md">
+      <div 
+        className="p-4 flex items-center justify-between cursor-pointer select-none"
+        onClick={onToggle}
+      >
+        <div className="flex items-center gap-4">
+          <div className="text-muted-foreground">
+            {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+          </div>
+          <div>
+            <h4 className="font-bold text-foreground">{sprint.name}</h4>
+            <p className="text-xs text-muted-foreground">
+              {sprint.start_date ? format(new Date(sprint.start_date), 'MM/dd') : '?'} - {sprint.end_date ? format(new Date(sprint.end_date), 'MM/dd') : '?'}
+              {' · '}{tasks.length} タスク
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-6">
+          <div className="flex flex-col items-end gap-1.5 w-32 hidden sm:flex">
+             <div className="flex justify-between w-full text-[10px] text-muted-foreground font-medium">
+               <span>進捗</span>
+               <span>{Math.round(progress)}%</span>
+             </div>
+             <div className="w-full bg-secondary rounded-full h-1.5">
+               <div 
+                 className="bg-primary h-1.5 rounded-full transition-all duration-500" 
+                 style={{ width: `${progress}%` }} 
+               />
+             </div>
+          </div>
+          <Button variant="ghost" size="icon" className="text-muted-foreground">
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {isExpanded && (
+        <div className="border-t border-border/50 p-2">
+          {tasks.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground text-sm">
+              このスプリントにタスクはありません。バックログから移動してください。
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1">
+              {tasks.map(task => (
+                <div 
+                  key={task.id}
+                  className="group flex items-center justify-between p-3 rounded-xl hover:bg-secondary/50 transition-colors cursor-pointer"
+                  onClick={() => onTaskClick(task)}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <TaskStatusIcon status={task.status} />
+                    <span className={cn("text-sm text-foreground/80 truncate", task.status === 'done' && "line-through text-muted-foreground/60")}>
+                      {task.title}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4 shrink-0 px-2">
+                    {task.estimate && <span className="text-[10px] text-muted-foreground font-mono">{task.estimate}h</span>}
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-7 text-[10px] text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onMoveToBacklog(task.id);
+                      }}
+                    >
+                      バックログへ
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BacklogTaskCard({ 
+  task, 
+  sprints, 
+  onTaskClick,
+  onAssignSprint 
+}: { 
+  task: Task; 
+  sprints: Sprint[]; 
+  onTaskClick: () => void;
+  onAssignSprint: (sprintId: number) => void;
+}) {
+  const priorityColors = {
+    1: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
+    2: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
+    3: 'text-rose-400 bg-rose-400/10 border-rose-400/20',
+  };
+
+  return (
+    <div 
+      className="group flex items-center justify-between p-3 rounded-xl bg-card border border-border/50 hover:border-primary/20 transition-all cursor-pointer shadow-sm hover:shadow-md"
+      onClick={onTaskClick}
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <Badge variant="outline" className={cn("text-[8px] h-4 px-1", priorityColors[task.priority])}>
+          {task.priority === 3 ? 'High' : task.priority === 2 ? 'Med' : 'Low'}
+        </Badge>
+        <span className="text-sm text-foreground/80 font-medium truncate">{task.title}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        {sprints.map(sprint => (
+          <Button
+            key={sprint.id}
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-[10px] border-border text-muted-foreground hover:text-foreground hover:bg-secondary opacity-0 group-hover:opacity-100 transition-all"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAssignSprint(sprint.id);
+            }}
+          >
+            {sprint.name}
+          </Button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TaskStatusIcon({ status }: { status: TaskStatus }) {
+  switch (status) {
+    case 'done': return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+    case 'doing': return <Clock className="h-4 w-4 text-amber-500" />;
+    default: return <Circle className="h-4 w-4 text-muted-foreground/40" />;
+  }
+}
