@@ -10,6 +10,7 @@ from sqlmodel import Session, select
 from app.core.config import settings
 from app.core.redis import close_redis, init_redis
 from app.api.routers import auth, points, projects, tasks, sprints, ai, admin
+from app.api.error_handlers import register_error_handlers
 from app.db.session import engine, get_session
 from app.models import Project, Task
 
@@ -33,6 +34,9 @@ app = FastAPI(
     description="API for the TaskForge AI-powered project management app.",
     version="1.0.0",
 )
+
+# エラーハンドラーの登録
+register_error_handlers(app)
 
 # CORS configuration - MUST BE AT THE TOP
 # セキュリティ強化: 許可されたオリジンのみを許可

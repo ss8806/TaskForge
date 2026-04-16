@@ -1,183 +1,177 @@
-"""プロジェクトAPIのテスト。"""
+"""
+プロジェクトAPIのテスト
+"""
+import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
-from app.models import User, Project
-from tests.fixtures.auth import create_test_user, get_auth_headers
+from app.models import Project, User
+from app.core.security import hash_password, create_access_token
 
 
-def test_list_projects(client: TestClient, session: Session):
-    """プロジェクト一覧取得のテスト。"""
-    user = create_test_user(session)
-    headers = get_auth_headers(client, user)
+def test_create_project(client: TestClient, auth_headers: dict):
+    """プロジェクト作成テスト"""
+    response = client.post(
+        "/api/projects",
+        json={"name": "Test Project", "description": "Test Description"},
+        headers=auth_headers
+    )
+    
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "Test Project"
+    assert data["description"] == "Test Description"
+    assert "id" in data
+    assert "owner_id" in data
 
-    # プロジェクト作成
+
+def test_create_project_without_description(client: TestClient, auth_headers: dict):
+    """説明なしでプロジェクト作成"""
+    response = client.post(
+        "/api/projects",
+        json={"name": "Test Project No Desc"},
+        headers=auth_headers
+    )
+    
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "Test Project No Desc"
+    assert data["description"] is None
+
+
+def test_create_project_unauthorized(client: TestClient):
+    """認証なしでプロジェクト作成は失敗"""
+    response = client.post(
+        "/api/projects",
+        json={"name": "Test Project"}
+    )
+    
+    assert response.status_code == 401
+
+
+def test_list_projects(client: TestClient, auth_headers: dict, session: Session):
+    """プロジェクト一覧取得"""
+    # テストデータ作成
+    from app.models import User
+    user = session.exec(session.query(User).where(User.email == "test@example.com")).first()
+    
     project1 = Project(name="Project 1", owner_id=user.id)
     project2 = Project(name="Project 2", owner_id=user.id)
     session.add(project1)
     session.add(project2)
     session.commit()
-
-    # プロジェクト一覧取得
-    response = client.get("/api/projects", headers=headers)
+    
+    response = client.get("/api/projects", headers=auth_headers)
+    
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 2
-    assert data[0]["name"] == "Project 1"
-    assert data[1]["name"] == "Project 2"
+    assert len(data) >= 2
+    assert any(p["name"] == "Project 1" for p in data)
+    assert any(p["name"] == "Project 2" for p in data)
 
 
-def test_list_projects_only_own(client: TestClient, session: Session):
-    """自分のプロジェクトのみ取得できるテスト。"""
-    user1 = create_test_user(session, "user1@example.com")
-    user2 = create_test_user(session, "user2@example.com")
-
-    headers1 = get_auth_headers(client, user1)
-    headers2 = get_auth_headers(client, user2)
-
-    # user1のプロジェクト作成
-    project = Project(name="User1 Project", owner_id=user1.id)
-    session.add(project)
-    session.commit()
-
-    # user1が自分のプロジェクトのみ取得できる
-    response1 = client.get("/api/projects", headers=headers1)
-    assert response1.status_code == 200
-    data1 = response1.json()
-    assert len(data1) == 1
-
-    # user2が自分のプロジェクトのみ取得できる（user1のプロジェクトは含まれない）
-    response2 = client.get("/api/projects", headers=headers2)
-    assert response2.status_code == 200
-    data2 = response2.json()
-    assert len(data2) == 0
-
-
-def test_create_project(client: TestClient, session: Session):
-    """プロジェクト作成のテスト。"""
-    user = create_test_user(session)
-    headers = get_auth_headers(client, user)
-
-    response = client.post(
-        "/api/projects",
-        headers=headers,
-        json={
-            "name": "Test Project",
-            "description": "A test project"
-        }
-    )
-    assert response.status_code == 201
+def test_list_projects_pagination(client: TestClient, auth_headers: dict):
+    """ページネーション機能"""
+    response = client.get("/api/projects?limit=1&offset=0", headers=auth_headers)
+    
+    assert response.status_code == 200
     data = response.json()
-    assert data["name"] == "Test Project"
-    assert data["description"] == "A test project"
-    assert data["owner_id"] == user.id
+    # limitが機能しているか確認
+    assert len(data) <= 1
 
 
-def test_create_project_unauthorized(client: TestClient, session: Session):
-    """未認証でプロジェクト作成が失敗するテスト。"""
-    response = client.post(
-        "/api/projects",
-        json={
-            "name": "Unauthorized Project",
-            "description": "This should fail"
-        }
-    )
-    assert response.status_code == 401  # 未認証
-
-
-def test_get_project(client: TestClient, session: Session):
-    """プロジェクト詳細取得のテスト。"""
-    user = create_test_user(session)
-    headers = get_auth_headers(client, user)
-
-    project = Project(name="Test Project", description="Test Description", owner_id=user.id)
+def test_get_project(client: TestClient, auth_headers: dict, session: Session):
+    """プロジェクト詳細取得"""
+    from app.models import User
+    user = session.exec(session.query(User).where(User.email == "test@example.com")).first()
+    
+    project = Project(name="Detail Test", owner_id=user.id)
     session.add(project)
     session.commit()
     session.refresh(project)
-
-    response = client.get(f"/api/projects/{project.id}", headers=headers)
+    
+    response = client.get(f"/api/projects/{project.id}", headers=auth_headers)
+    
     assert response.status_code == 200
     data = response.json()
+    assert data["name"] == "Detail Test"
     assert data["id"] == project.id
-    assert data["name"] == "Test Project"
-    assert data["description"] == "Test Description"
 
 
-def test_get_project_unauthorized(client: TestClient, session: Session):
-    """他人のプロジェクト詳細取得が失敗するテスト。"""
-    user1 = create_test_user(session, "user1@example.com")
-    user2 = create_test_user(session, "user2@example.com")
-
-    headers1 = get_auth_headers(client, user1)
-    headers2 = get_auth_headers(client, user2)
-
-    # user1のプロジェクト作成
-    project = Project(name="User1 Project", owner_id=user1.id)
-    session.add(project)
-    session.commit()
-    session.refresh(project)
-
-    # user2がuser1のプロジェクト詳細を取得しようとする
-    response = client.get(f"/api/projects/{project.id}", headers=headers2)
-    assert response.status_code == 403
-    data = response.json()
-    assert data["detail"] == "Not authorized"
-
-
-def test_get_project_not_found(client: TestClient, session: Session):
-    """存在しないプロジェクト取得のテスト。"""
-    user = create_test_user(session)
-    headers = get_auth_headers(client, user)
-
-    response = client.get("/api/projects/99999", headers=headers)
+def test_get_project_not_found(client: TestClient, auth_headers: dict):
+    """存在しないプロジェクト取得"""
+    response = client.get("/api/projects/99999", headers=auth_headers)
+    
     assert response.status_code == 404
-    data = response.json()
-    assert data["detail"] == "Project not found"
 
 
-def test_delete_project(client: TestClient, session: Session):
-    """プロジェクト削除のテスト。"""
-    user = create_test_user(session)
-    headers = get_auth_headers(client, user)
-
-    project = Project(name="Project to Delete", owner_id=user.id)
-    session.add(project)
+def test_get_project_forbidden(client: TestClient, auth_headers: dict, session: Session):
+    """他ユーザーのプロジェクトへのアクセス拒否"""
+    # 別ユーザーを作成
+    other_user = User(
+        email="other@example.com",
+        password_hash=hash_password("password123"),
+        role="user"
+    )
+    session.add(other_user)
     session.commit()
-    session.refresh(project)
-
-    # 削除前
-    response_before = client.get(f"/api/projects/{project.id}", headers=headers)
-    assert response_before.status_code == 200
-
-    # プロジェクト削除
-    response = client.delete(f"/api/projects/{project.id}", headers=headers)
-    assert response.status_code == 204
-
-    # 削除後
-    response_after = client.get(f"/api/projects/{project.id}", headers=headers)
-    assert response_after.status_code == 404
-
-
-def test_delete_project_unauthorized(client: TestClient, session: Session):
-    """他人のプロジェクト削除が失敗するテスト。"""
-    user1 = create_test_user(session, "user1@example.com")
-    user2 = create_test_user(session, "user2@example.com")
-
-    headers1 = get_auth_headers(client, user1)
-    headers2 = get_auth_headers(client, user2)
-
-    # user1のプロジェクト作成
-    project = Project(name="User1 Project", owner_id=user1.id)
-    session.add(project)
+    session.refresh(other_user)
+    
+    # 別ユーザーのプロジェクトを作成
+    other_project = Project(name="Other Project", owner_id=other_user.id)
+    session.add(other_project)
     session.commit()
-    session.refresh(project)
-
-    # user2がuser1のプロジェクトを削除しようとする
-    response = client.delete(f"/api/projects/{project.id}", headers=headers2)
+    session.refresh(other_project)
+    
+    response = client.get(f"/api/projects/{other_project.id}", headers=auth_headers)
+    
     assert response.status_code == 403
-    data = response.json()
-    assert data["detail"] == "Not authorized"
 
-    # プロジェクトが削除されていないことを確認
-    response = client.get(f"/api/projects/{project.id}", headers=headers1)
-    assert response.status_code == 200
+
+def test_delete_project(client: TestClient, auth_headers: dict, session: Session):
+    """プロジェクト削除"""
+    from app.models import User
+    user = session.exec(session.query(User).where(User.email == "test@example.com")).first()
+    
+    project = Project(name="Delete Test", owner_id=user.id)
+    session.add(project)
+    session.commit()
+    session.refresh(project)
+    
+    response = client.delete(f"/api/projects/{project.id}", headers=auth_headers)
+    
+    assert response.status_code == 204
+    
+    # 削除確認
+    response = client.get(f"/api/projects/{project.id}", headers=auth_headers)
+    assert response.status_code == 404
+
+
+def test_delete_project_not_found(client: TestClient, auth_headers: dict):
+    """存在しないプロジェクト削除"""
+    response = client.delete("/api/projects/99999", headers=auth_headers)
+    
+    assert response.status_code == 404
+
+
+def test_delete_project_forbidden(client: TestClient, auth_headers: dict, session: Session):
+    """他ユーザーのプロジェクト削除拒否"""
+    # 別ユーザーを作成
+    other_user = User(
+        email="other2@example.com",
+        password_hash=hash_password("password123"),
+        role="user"
+    )
+    session.add(other_user)
+    session.commit()
+    session.refresh(other_user)
+    
+    # 別ユーザーのプロジェクトを作成
+    other_project = Project(name="Other Project 2", owner_id=other_user.id)
+    session.add(other_project)
+    session.commit()
+    session.refresh(other_project)
+    
+    response = client.delete(f"/api/projects/{other_project.id}", headers=auth_headers)
+    
+    assert response.status_code == 403

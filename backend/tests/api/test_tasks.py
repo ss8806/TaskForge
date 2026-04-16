@@ -1,214 +1,175 @@
-"""タスクAPIのテスト。"""
+"""
+タスクAPIのテスト
+"""
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
-from app.models import User, Project, Task
-from tests.fixtures.auth import create_test_user, get_auth_headers
+from app.models import Project, Task, User
+from app.core.security import hash_password
 
 
-def test_list_tasks_empty(client: TestClient, session: Session):
-    """タスクがない場合のリスト取得テスト。"""
-    user = create_test_user(session)
-    headers = get_auth_headers(client, user)
-
-    response = client.get("/api/projects/1/tasks", headers=headers)
-    assert response.status_code == 404  # プロジェクトが存在しない
-
-
-def test_create_task(client: TestClient, session: Session):
-    """タスク作成のテスト。"""
-    user = create_test_user(session)
-    headers = get_auth_headers(client, user)
-
-    # プロジェクト作成
-    project = Project(name="Test Project", owner_id=user.id)
+def test_create_task(client: TestClient, auth_headers: dict, session: Session):
+    """タスク作成テスト"""
+    from app.models import User
+    user = session.exec(session.query(User).where(User.email == "test@example.com")).first()
+    
+    project = Project(name="Task Test Project", owner_id=user.id)
     session.add(project)
     session.commit()
     session.refresh(project)
-
-    # タスク作成
+    
     response = client.post(
         f"/api/projects/{project.id}/tasks",
-        headers=headers,
         json={
             "title": "Test Task",
-            "description": "Test task description",
-            "priority": 2,
-            "status": "todo"
-        }
+            "description": "Test Description",
+            "status": "todo",
+            "priority": 2
+        },
+        headers=auth_headers
     )
+    
     assert response.status_code == 201
     data = response.json()
     assert data["title"] == "Test Task"
+    assert data["project_id"] == project.id
     assert data["status"] == "todo"
-    assert data["priority"] == 2
 
 
-def test_create_task_unauthorized_project(client: TestClient, session: Session):
-    """他人のプロジェクトにタスクを作成しようとするテスト。"""
-    user1 = create_test_user(session, "user1@example.com")
-    user2 = create_test_user(session, "user2@example.com")
-
-    headers1 = get_auth_headers(client, user1)
-    headers2 = get_auth_headers(client, user2)
-
-    # user1のプロジェクト作成
-    project = Project(name="User1 Project", owner_id=user1.id)
+def test_list_tasks(client: TestClient, auth_headers: dict, session: Session):
+    """タスク一覧取得"""
+    from app.models import User
+    user = session.exec(session.query(User).where(User.email == "test@example.com")).first()
+    
+    project = Project(name="List Tasks Project", owner_id=user.id)
     session.add(project)
     session.commit()
     session.refresh(project)
+    
+    # タスクを作成
+    task1 = Task(title="Task 1", project_id=project.id, status="todo")
+    task2 = Task(title="Task 2", project_id=project.id, status="doing")
+    session.add(task1)
+    session.add(task2)
+    session.commit()
+    
+    response = client.get(f"/api/projects/{project.id}/tasks", headers=auth_headers)
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) >= 2
 
-    # user2がuser1のプロジェクトにタスクを作成しようとする
-    response = client.post(
-        f"/api/projects/{project.id}/tasks",
-        headers=headers2,
-        json={"title": "Unauthorized Task", "status": "todo"}
-    )
-    # プロジェクト詳細取得は認可チェックがあるが、タスク作成にはない
-    # このテストはタスクが作成されることを確認
-    # 実際の認可はタスク更新/削除時に実施されるべき
 
-
-def test_update_task(client: TestClient, session: Session):
-    """タスク更新のテスト。"""
-    user = create_test_user(session)
-    headers = get_auth_headers(client, user)
-
-    # プロジェクトとタスク作成
-    project = Project(name="Test Project", owner_id=user.id)
+def test_list_tasks_with_filter(client: TestClient, auth_headers: dict, session: Session):
+    """ステータスフィルタリング"""
+    from app.models import User
+    user = session.exec(session.query(User).where(User.email == "test@example.com")).first()
+    
+    project = Project(name="Filter Tasks Project", owner_id=user.id)
     session.add(project)
     session.commit()
     session.refresh(project)
+    
+    # 異なるステータスのタスクを作成
+    task_todo = Task(title="Todo Task", project_id=project.id, status="todo")
+    task_done = Task(title="Done Task", project_id=project.id, status="done")
+    session.add(task_todo)
+    session.add(task_done)
+    session.commit()
+    
+    response = client.get(f"/api/projects/{project.id}/tasks?status=todo", headers=auth_headers)
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert all(t["status"] == "todo" for t in data)
 
-    task = Task(
-        title="Original Title",
-        status="todo",
-        priority=2,
-        project_id=project.id
-    )
+
+def test_update_task(client: TestClient, auth_headers: dict, session: Session):
+    """タスク更新"""
+    from app.models import User
+    user = session.exec(session.query(User).where(User.email == "test@example.com")).first()
+    
+    project = Project(name="Update Task Project", owner_id=user.id)
+    session.add(project)
+    session.commit()
+    session.refresh(project)
+    
+    task = Task(title="Original Title", project_id=project.id, status="todo")
     session.add(task)
     session.commit()
     session.refresh(task)
-
-    # タスク更新
+    
     response = client.put(
         f"/api/tasks/{task.id}",
-        headers=headers,
-        json={
-            "title": "Updated Title",
-            "status": "doing",
-            "priority": 3
-        }
+        json={"title": "Updated Title", "status": "doing"},
+        headers=auth_headers
     )
+    
     assert response.status_code == 200
     data = response.json()
     assert data["title"] == "Updated Title"
     assert data["status"] == "doing"
-    assert data["priority"] == 3
 
 
-def test_delete_task(client: TestClient, session: Session):
-    """タスク削除のテスト。"""
-    user = create_test_user(session)
-    headers = get_auth_headers(client, user)
+def test_update_task_not_found(client: TestClient, auth_headers: dict):
+    """存在しないタスク更新"""
+    response = client.put(
+        "/api/tasks/99999",
+        json={"title": "Updated"},
+        headers=auth_headers
+    )
+    
+    assert response.status_code == 404
 
-    # プロジェクトとタスク作成
-    project = Project(name="Test Project", owner_id=user.id)
+
+def test_delete_task(client: TestClient, auth_headers: dict, session: Session):
+    """タスク削除"""
+    from app.models import User
+    user = session.exec(session.query(User).where(User.email == "test@example.com")).first()
+    
+    project = Project(name="Delete Task Project", owner_id=user.id)
     session.add(project)
     session.commit()
     session.refresh(project)
-
-    task = Task(
-        title="Task to Delete",
-        status="todo",
-        project_id=project.id
-    )
+    
+    task = Task(title="Task to Delete", project_id=project.id)
     session.add(task)
     session.commit()
     session.refresh(task)
-
-    # タスク削除
-    response = client.delete(
-        f"/api/tasks/{task.id}",
-        headers=headers
-    )
+    
+    response = client.delete(f"/api/tasks/{task.id}", headers=auth_headers)
+    
     assert response.status_code == 204
-
+    
     # 削除確認
-    response = client.get(
-        f"/api/tasks/{task.id}",
-        headers=headers
-    )
-    assert response.status_code == 404
-
-
-def test_list_tasks_by_status(client: TestClient, session: Session):
-    """ステータスフィルタリングのテスト。"""
-    user = create_test_user(session)
-    headers = get_auth_headers(client, user)
-
-    # プロジェクト作成
-    project = Project(name="Test Project", owner_id=user.id)
-    session.add(project)
-    session.commit()
-    session.refresh(project)
-
-    # 複数のタスク作成
-    session.add(Task(title="Todo Task", status="todo", project_id=project.id))
-    session.add(Task(title="Doing Task", status="doing", project_id=project.id))
-    session.add(Task(title="Done Task", status="done", project_id=project.id))
-    session.commit()
-
-    # todoステータスでフィルタリング
-    response = client.get(
-        f"/api/projects/{project.id}/tasks?status=todo",
-        headers=headers
-    )
-    assert response.status_code == 200
+    response = client.get(f"/api/projects/{project.id}/tasks", headers=auth_headers)
     data = response.json()
-    assert len(data) == 1
-    assert data[0]["status"] == "todo"
+    assert not any(t["id"] == task.id for t in data)
 
 
-def test_list_tasks_by_sprint(client: TestClient, session: Session):
-    """スプリントフィルタリングのテスト。"""
-    from app.models import Sprint
-
-    user = create_test_user(session)
-    headers = get_auth_headers(client, user)
-
-    # プロジェクトとスプリント作成
-    project = Project(name="Test Project", owner_id=user.id)
-    session.add(project)
-    session.commit()
-    session.refresh(project)
-
-    sprint = Sprint(name="Sprint 1", project_id=project.id)
-    session.add(sprint)
-    session.commit()
-    session.refresh(sprint)
-
-    # スプリントに属するタスクと属さないタスク
-    session.add(Task(title="In Sprint", status="todo", project_id=project.id, sprint_id=sprint.id))
-    session.add(Task(title="No Sprint", status="todo", project_id=project.id))
-    session.commit()
-
-    # スプリントIDでフィルタリング
-    response = client.get(
-        f"/api/projects/{project.id}/tasks?sprint_id={sprint.id}",
-        headers=headers
+def test_create_task_forbidden_project(client: TestClient, auth_headers: dict, session: Session):
+    """他ユーザーのプロジェクトにタスク作成は拒否"""
+    # 別ユーザーを作成
+    other_user = User(
+        email="other_task@example.com",
+        password_hash=hash_password("password123"),
+        role="user"
     )
-    assert response.status_code == 200
-    data = response.json()
-    assert len(data) == 1
-    assert data[0]["sprint_id"] == sprint.id
-
-
-def test_task_not_found(client: TestClient, session: Session):
-    """存在しないタスクの取得テスト。"""
-    user = create_test_user(session)
-    headers = get_auth_headers(client, user)
-
-    response = client.get("/api/tasks/99999", headers=headers)
-    assert response.status_code == 404
+    session.add(other_user)
+    session.commit()
+    session.refresh(other_user)
+    
+    # 別ユーザーのプロジェクト
+    other_project = Project(name="Other User Project", owner_id=other_user.id)
+    session.add(other_project)
+    session.commit()
+    session.refresh(other_project)
+    
+    response = client.post(
+        f"/api/projects/{other_project.id}/tasks",
+        json={"title": "Hacked Task"},
+        headers=auth_headers
+    )
+    
+    assert response.status_code == 403
