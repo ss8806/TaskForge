@@ -89,6 +89,171 @@ npm run dev
 - `Docs/`: 要件定義・設計ドキュメント
 - `docker-compose.yml`: DBおよびRedisの設定
 
+## 🛠️ 開発ツールと効率化
+
+このプロジェクトでは、開発効率とコード品質を向上させるためのツールを導入しています。
+
+### コードフォーマット・リンティング
+
+#### バックエンド (Python)
+```bash
+cd backend
+
+# コードフォーマット（ruff）
+uv run ruff format .
+
+# リントチェックと自動修正
+uv run ruff check . --fix
+
+# 型チェック（mypy）
+uv run mypy app/
+```
+
+#### フロントエンド (TypeScript/React)
+```bash
+cd frontend
+
+# コードフォーマット（prettier）
+bun run format
+
+# フォーマットチェック（変更なし確認）
+bun run format:check
+
+# リントチェック
+bun run lint
+
+# リント自動修正
+bun run lint:fix
+```
+
+### テスト実行
+
+#### バックエンド
+```bash
+cd backend
+
+# 全テスト実行
+uv run pytest tests/ -v
+
+# カバレッジレポート付き
+uv run pytest tests/ -v --cov=app --cov-report=html
+
+# 特定のテストファイルだけ実行
+uv run pytest tests/api/test_auth.py -v
+
+# テスト並列実行（pytest-xdist導入後）
+uv run pytest tests/ -n auto
+```
+
+#### フロントエンド
+```bash
+cd frontend
+
+# 全テスト実行
+bun run test
+
+# UI付きテスト（ウォッチモード）
+bun run test:ui
+
+# カバレッジレポート付き
+bun run test:coverage
+```
+
+### テストデータ生成（factory-boy）
+
+バックエンドテストで使用するテストデータを自動生成できます：
+
+```python
+# backend/tests/factories.py
+from tests.factories import UserFactory, ProjectFactory, TaskFactory
+
+# ユーザー作成
+user = UserFactory(email="test@example.com", name="Test User")
+
+# プロジェクト作成（所有者も自動作成）
+project = ProjectFactory(name="My Project")
+
+# タスク作成（スプリント、プロジェクト、所有者も自動作成）
+task = TaskFactory(title="Important Task")
+```
+
+### APIモック（MSW - Mock Service Worker）
+
+フロントエンドテストでAPIレスポンスをモック化：
+
+```typescript
+// frontend/src/test/mocks/handlers.ts
+import { http, HttpResponse } from 'msw'
+
+export const handlers = [
+  http.get('/api/projects', () => {
+    return HttpResponse.json({
+      items: [],
+      total: 0,
+      page: 1,
+      page_size: 20
+    })
+  })
+]
+```
+
+### pre-commit フック
+
+コミット時に自動的にコードチェックを実行：
+
+```bash
+# pre-commitインストール（初回のみ）
+cd backend
+uv run pre-commit install
+
+# 手動で全ファイルチェック
+uv run pre-commit run --all-files
+
+# 特定のフックだけ実行
+uv run pre-commit run ruff --all-files
+```
+
+コミット時に以下のチェックが自動実行されます：
+- ✅ Ruff（リンティング・フォーマット）
+- ✅ mypy（型チェック）
+- ✅ pytest（テスト実行）
+
+### React Query DevTools
+
+開発者ツールでクエリ状態を可視化：
+
+- ブラウザ右下にReact Queryアイコンが表示されます
+- クリックするとDevToolsが開きます
+- クエリキャッシュ、ローディング状態、エラーを確認可能
+
+### テストフィクスチャ
+
+#### バックエンド
+```python
+# conftest.pyで定義済みのフィクスチャ
+@pytest.fixture
+def user(session: Session) -> User: ...  # 通常ユーザー
+
+@pytest.fixture
+def admin_user(session: Session) -> User: ...  # 管理者ユーザー
+
+@pytest.fixture
+def auth_headers(client: TestClient, session: Session) -> dict: ...  # 認証ヘッダー
+```
+
+使用例：
+```python
+def test_create_project(client: TestClient, auth_headers: dict):
+    response = client.post(
+        "/api/projects",
+        json={"name": "Test Project"},
+        headers=auth_headers
+    )
+    assert response.status_code == 200
+```
+
+---
+
 ## 🛠️ 将来の拡張 (Phase 2+)
 
 - [ ] AIによるタスク自動分解機能の実装
