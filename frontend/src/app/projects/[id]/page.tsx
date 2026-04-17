@@ -10,6 +10,7 @@ import { GanttChartView } from '@/components/gantt-chart-view';
 import { TaskDetailDialog } from '@/components/task-detail-dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { Task } from '@/types';
 import {
   Dialog,
   DialogContent,
@@ -48,7 +49,7 @@ export default function ProjectPage() {
   const [aiPrompt, setAiPrompt] = useState('');
   const [activeTab, setActiveTab] = useState('kanban');
   const [selectedSprintId, setSelectedSprintId] = useState<string>('all');
-  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [aiSprintId, setAiSprintId] = useState<string>('none');
 
@@ -73,6 +74,10 @@ export default function ProjectPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'tasks'] });
     },
+    onError: (error) => {
+      console.error('Failed to update task:', error);
+      alert('タスクの更新に失敗しました');
+    },
   });
 
   const createTaskMutation = useMutation({
@@ -81,6 +86,10 @@ export default function ProjectPage() {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'tasks'] });
       setIsTaskModalOpen(false);
       setTaskForm({ title: '', description: '', sprint_id: undefined });
+    },
+    onError: (error) => {
+      console.error('Failed to create task:', error);
+      alert('タスクの作成に失敗しました');
     },
   });
 
@@ -91,6 +100,10 @@ export default function ProjectPage() {
       setIsAiModalOpen(false);
       setAiPrompt('');
       setAiSprintId('none');
+    },
+    onError: (error) => {
+      console.error('AI decomposition failed:', error);
+      alert('AIタスク分解に失敗しました');
     },
   });
 

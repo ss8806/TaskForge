@@ -2,6 +2,9 @@
 
 FastAPIを利用したTaskForgeのバックエンドAPIです。
 
+## 必要条件
+- **Python**: 3.13以上
+
 ## 技術スタック
 - **Framework**: FastAPI
 - **ORM**: SQLModel

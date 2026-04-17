@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Literal
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 
 
 # ── Auth schemas ──────────────────────────────────────────────────────────────
@@ -71,6 +71,9 @@ class SprintResponse(BaseModel):
 
 # ── Task schemas ──────────────────────────────────────────────────────────────
 
+VALID_TASK_STATUSES = {"todo", "in_progress", "review", "done"}
+
+
 class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None
@@ -80,6 +83,15 @@ class TaskCreate(BaseModel):
     end_date: Optional[datetime] = None
     estimate: Optional[float] = None
     sprint_id: Optional[int] = None
+
+    @field_validator("status")
+    @classmethod
+    def validate_status(cls, v: str) -> str:
+        if v not in VALID_TASK_STATUSES:
+            raise ValueError(
+                f"Invalid status '{v}'. Must be one of: {', '.join(sorted(VALID_TASK_STATUSES))}"
+            )
+        return v
 
 
 class TaskUpdate(BaseModel):
@@ -91,6 +103,15 @@ class TaskUpdate(BaseModel):
     end_date: Optional[datetime] = None
     estimate: Optional[float] = None
     sprint_id: Optional[int] = None
+
+    @field_validator("status")
+    @classmethod
+    def validate_status(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in VALID_TASK_STATUSES:
+            raise ValueError(
+                f"Invalid status '{v}'. Must be one of: {', '.join(sorted(VALID_TASK_STATUSES))}"
+            )
+        return v
 
 
 class TaskResponse(BaseModel):
