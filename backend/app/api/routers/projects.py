@@ -7,6 +7,7 @@ from sqlmodel import select
 from app.api.dependencies import CurrentUserDep, SessionDep
 from app.api.schemas import ProjectCreate, ProjectResponse
 from app.models import Project
+from app.utils.soft_delete import soft_delete, filter_active
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -18,12 +19,10 @@ def list_projects(
     limit: int = 20,
     offset: int = 0,
 ):
-    projects = session.exec(
-        select(Project)
-        .where(Project.owner_id == current_user.id)
-        .offset(offset)
-        .limit(limit)
-    ).all()
+    query = select(Project).where(Project.owner_id == current_user.id)
+    # ソフトデリートされたプロジェクトを除外
+    query = filter_active(query, Project)
+    projects = session.exec(query.offset(offset).limit(limit)).all()
     return projects
 
 
@@ -56,7 +55,7 @@ def get_project(
     current_user: CurrentUserDep,
 ):
     project = session.get(Project, project_id)
-    if not project:
+    if not project or project.deleted_at is not None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
         )
@@ -73,9 +72,9 @@ def delete_project(
     session: SessionDep,
     current_user: CurrentUserDep,
 ):
-    """プロジェクト削除"""
+    """プロジェクト削除（ソフトデリート）"""
     project = session.get(Project, project_id)
-    if not project:
+    if not project or project.deleted_at is not None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
         )
@@ -84,8 +83,8 @@ def delete_project(
             status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized"
         )
     try:
-        session.delete(project)
-        session.commit()
+        # ソフトデリートを実行
+        soft_delete(session, project)
     except Exception:
         session.rollback()
         raise

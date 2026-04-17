@@ -10,7 +10,7 @@ import { GanttChartView } from '@/components/gantt-chart-view';
 import { TaskDetailDialog } from '@/components/task-detail-dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { Task } from '@/types';
+import type { Task, Sprint } from '@/types';
 import {
   Dialog,
   DialogContent,
@@ -81,7 +81,7 @@ export default function ProjectPage() {
   });
 
   const createTaskMutation = useMutation({
-    mutationFn: (data: any) => tasksApi.create(projectId, data),
+    mutationFn: (data: { title: string; description: string; sprint_id?: number }) => tasksApi.create(projectId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'tasks'] });
       setIsTaskModalOpen(false);
@@ -169,7 +169,7 @@ export default function ProjectPage() {
                          onChange={(e) => setTaskForm(prev => ({ ...prev, sprint_id: e.target.value ? Number(e.target.value) : undefined }))}
                        >
                          <option value="">なし (バックログ)</option>
-                         {sprints?.map((s: any) => (
+                         {sprints?.map((s: Sprint) => (
                            <option key={s.id} value={s.id}>{s.name}</option>
                          ))}
                        </select>
@@ -221,7 +221,7 @@ export default function ProjectPage() {
                          onChange={(e) => setAiSprintId(e.target.value)}
                        >
                          <option value="none">なし (バックログ)</option>
-                         {sprints?.map((s: any) => (
+                         {sprints?.map((s: Sprint) => (
                            <option key={s.id} value={s.id.toString()}>{s.name}</option>
                          ))}
                        </select>
@@ -293,7 +293,7 @@ export default function ProjectPage() {
                  <option value="all" className="bg-background">すべてのタスク</option>
                  <option value="backlog" className="bg-background">バックログのみ</option>
                  <optgroup label="スプリント" className="bg-background">
-                   {sprints?.map((s: any) => (
+                   {sprints?.map((s: Sprint) => (
                      <option key={s.id} value={s.id.toString()} className="bg-background">{s.name}</option>
                    ))}
                  </optgroup>

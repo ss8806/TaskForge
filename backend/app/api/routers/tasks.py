@@ -7,6 +7,7 @@ from sqlmodel import select
 from app.api.dependencies import CurrentUserDep, SessionDep, verify_project_access
 from app.api.schemas import TaskCreate, TaskResponse, TaskUpdate
 from app.models import Task
+from app.utils.soft_delete import soft_delete, filter_active
 
 router = APIRouter(tags=["tasks"])
 
@@ -26,6 +27,8 @@ def list_tasks(
 ):
     verify_project_access(project_id, current_user, session)
     query = select(Task).where(Task.project_id == project_id)
+    # ソフトデリートされたタスクを除外
+    query = filter_active(query, Task)
     if status is not None:
         query = query.where(Task.status == status)
     if sprint_id is not None:
@@ -71,7 +74,7 @@ def update_task(
 ):
     """タスク更新"""
     task = session.get(Task, task_id)
-    if not task:
+    if not task or task.deleted_at is not None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
         )
@@ -98,16 +101,16 @@ def delete_task(
     session: SessionDep,
     current_user: CurrentUserDep,
 ):
-    """タスク削除"""
+    """タスク削除（ソフトデリート）"""
     task = session.get(Task, task_id)
-    if not task:
+    if not task or task.deleted_at is not None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
         )
     verify_project_access(task.project_id, current_user, session)
     try:
-        session.delete(task)
-        session.commit()
+        # ソフトデリートを実行
+        soft_delete(session, task)
     except Exception:
         session.rollback()
         raise
