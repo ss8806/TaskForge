@@ -2,12 +2,13 @@ from datetime import datetime, timezone
 from typing import List
 
 from fastapi import APIRouter, HTTPException, status
-from sqlmodel import select
+from sqlmodel import select, func
 
 from app.api.dependencies import CurrentUserDep, SessionDep, verify_project_access
-from app.api.schemas import TaskCreate, TaskResponse, TaskUpdate
+from app.api.schemas import TaskCreate, TaskResponse, TaskUpdate, PaginatedResponse
 from app.models import Task
 from app.utils.soft_delete import soft_delete, filter_active
+from app.utils.pagination import create_paginated_response
 
 router = APIRouter(tags=["tasks"])
 
@@ -15,27 +16,44 @@ router = APIRouter(tags=["tasks"])
 # ── プロジェクト配下のタスクCRUD ─────────────────────────────────────────────
 
 
-@router.get("/projects/{project_id}/tasks", response_model=List[TaskResponse])
+@router.get("/projects/{project_id}/tasks", response_model=PaginatedResponse[TaskResponse])
 def list_tasks(
     project_id: int,
     session: SessionDep,
     current_user: CurrentUserDep,
-    limit: int = 100,
-    offset: int = 0,
+    page: int = 1,
+    page_size: int = 20,
     status: str | None = None,
     sprint_id: int | None = None,
 ):
+    """タスク一覧取得（ページネーション付き）"""
     verify_project_access(project_id, current_user, session)
-    query = select(Task).where(Task.project_id == project_id)
-    # ソフトデリートされたタスクを除外
-    query = filter_active(query, Task)
+    
+    # ベースクエリ
+    base_query = select(Task).where(Task.project_id == project_id)
+    base_query = filter_active(base_query, Task)
+    
+    # フィルターを適用
     if status is not None:
-        query = query.where(Task.status == status)
+        base_query = base_query.where(Task.status == status)
     if sprint_id is not None:
-        query = query.where(Task.sprint_id == sprint_id)
-    query = query.offset(offset).limit(limit)
+        base_query = base_query.where(Task.sprint_id == sprint_id)
+    
+    # 総件数を取得
+    count_query = select(func.count()).select_from(base_query.subquery())
+    total = session.exec(count_query).one()
+    
+    # ページネーションを適用
+    offset = (page - 1) * page_size
+    query = base_query.offset(offset).limit(page_size)
     tasks = session.exec(query).all()
-    return tasks
+    
+    return create_paginated_response(
+        items=tasks,
+        total=total,
+        page=page,
+        page_size=page_size
+    )
 
 
 @router.post(

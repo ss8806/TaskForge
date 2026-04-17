@@ -1,7 +1,23 @@
 from datetime import datetime
-from typing import Optional, Literal
+from typing import Optional, Literal, TypeVar, Generic, List
 
 from pydantic import BaseModel, EmailStr, field_validator
+
+
+# ── Paginated Response ────────────────────────────────────────────────────────
+
+T = TypeVar('T')
+
+
+class PaginatedResponse(BaseModel, Generic[T]):
+    """ページネーション付きレスポンススキーマ"""
+    items: List[T]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+    has_next: bool
+    has_prev: bool
 
 
 # ── Auth schemas ──────────────────────────────────────────────────────────────
