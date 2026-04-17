@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { AlertTriangle } from 'lucide-react';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle } from "lucide-react";
 
 interface Props {
   children: React.ReactNode;
@@ -26,9 +26,9 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
+    console.error("Error caught by boundary:", error, errorInfo);
     this.setState({ error, errorInfo });
-    
+
     // ここでエラーログサービスに送信することも可能
     // logErrorToService(error, errorInfo);
   }
@@ -51,7 +51,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
                 <AlertTriangle className="h-12 w-12 text-destructive" />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <h1 className="text-2xl font-bold text-foreground">
                 エラーが発生しました
@@ -61,7 +61,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
               </p>
             </div>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {process.env.NODE_ENV === "development" && this.state.error && (
               <div className="text-left p-4 bg-muted rounded-lg overflow-auto max-h-48">
                 <p className="font-mono text-sm text-destructive">
                   {this.state.error.toString()}
@@ -92,11 +92,11 @@ export class ErrorBoundary extends React.Component<Props, State> {
 }
 
 // 特定のセクション用のエラーバウンダリー
-export function SectionErrorBoundary({ 
-  children, 
-  sectionName = 'このセクション' 
-}: { 
-  children: React.ReactNode; 
+export function SectionErrorBoundary({
+  children,
+  sectionName = "このセクション",
+}: {
+  children: React.ReactNode;
   sectionName?: string;
 }) {
   return (
@@ -105,14 +105,16 @@ export function SectionErrorBoundary({
         <div className="p-6 border border-destructive/20 rounded-lg bg-destructive/5">
           <div className="flex items-center gap-2 text-destructive mb-2">
             <AlertTriangle className="h-5 w-5" />
-            <h3 className="font-semibold">{sectionName}の読み込みに失敗しました</h3>
+            <h3 className="font-semibold">
+              {sectionName}の読み込みに失敗しました
+            </h3>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
             一時的な問題が発生しました。再読み込みしてみてください。
           </p>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => window.location.reload()}
           >
             再読み込み

@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import APIRouter, HTTPException, status
 from sqlmodel import select
 
@@ -10,7 +8,7 @@ from app.models import Sprint
 router = APIRouter(tags=["sprints"])
 
 
-@router.get("/projects/{project_id}/sprints", response_model=List[SprintResponse])
+@router.get("/projects/{project_id}/sprints", response_model=list[SprintResponse])
 def list_sprints(
     project_id: int,
     session: SessionDep,

@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { projectsApi } from '@/lib/api';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { projectsApi } from "@/lib/api";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -20,39 +20,39 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useAuthStore } from '@/hooks/use-auth-store';
-import { 
-  Plus, 
-  LayoutDashboard, 
-  LogOut, 
-  FolderKanban, 
-  Calendar, 
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuthStore } from "@/hooks/use-auth-store";
+import {
+  Plus,
+  LayoutDashboard,
+  LogOut,
+  FolderKanban,
+  Calendar,
   ChevronRight,
   Sparkles,
-  Loader2
-} from 'lucide-react';
+  Loader2,
+} from "lucide-react";
 
 export default function DashboardPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const logout = useAuthStore((state) => state.logout);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectName, setNewProjectName] = useState("");
 
   const { data: projects, isLoading } = useQuery({
-    queryKey: ['projects'],
+    queryKey: ["projects"],
     queryFn: () => projectsApi.list(),
   });
 
   const createMutation = useMutation({
     mutationFn: (name: string) => projectsApi.create({ name }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
       setIsCreateModalOpen(false);
-      setNewProjectName('');
+      setNewProjectName("");
     },
   });
 
@@ -74,7 +74,12 @@ export default function DashboardPage() {
             <span className="font-bold text-xl tracking-tight">TaskForge</span>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={logout} className="text-muted-foreground hover:text-foreground">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={logout}
+              className="text-muted-foreground hover:text-foreground"
+            >
               <LogOut className="h-4 w-4 mr-2" />
               ログアウト
             </Button>
@@ -86,7 +91,9 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">プロジェクト</h1>
-            <p className="text-zinc-400 mt-1">管理しているプロジェクトの一覧です</p>
+            <p className="text-zinc-400 mt-1">
+              管理しているプロジェクトの一覧です
+            </p>
           </div>
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
             <DialogTrigger asChild>
@@ -105,9 +112,9 @@ export default function DashboardPage() {
               <div className="py-4 space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">プロジェクト名</Label>
-                  <Input 
-                    id="name" 
-                    placeholder="例: 次世代アプリ開発" 
+                  <Input
+                    id="name"
+                    placeholder="例: 次世代アプリ開発"
                     value={newProjectName}
                     onChange={(e) => setNewProjectName(e.target.value)}
                     className="bg-background border-border text-foreground focus:ring-primary/20"
@@ -115,13 +122,20 @@ export default function DashboardPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="ghost" onClick={() => setIsCreateModalOpen(false)}>キャンセル</Button>
-                <Button 
+                <Button
+                  variant="ghost"
+                  onClick={() => setIsCreateModalOpen(false)}
+                >
+                  キャンセル
+                </Button>
+                <Button
                   onClick={handleCreateProject}
                   className="bg-primary text-primary-foreground hover:bg-primary/90 transition-all font-semibold rounded-xl"
                   disabled={createMutation.isPending || !newProjectName.trim()}
                 >
-                  {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {createMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   作成する
                 </Button>
               </DialogFooter>
@@ -132,22 +146,31 @@ export default function DashboardPage() {
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-48 rounded-2xl bg-zinc-900/50 border border-zinc-800 animate-pulse" />
+              <div
+                key={i}
+                className="h-48 rounded-2xl bg-zinc-900/50 border border-zinc-800 animate-pulse"
+              />
             ))}
           </div>
         ) : projects?.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-secondary/30 rounded-3xl border border-border border-dashed">
             <FolderKanban className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground text-lg">プロジェクトがまだありません</p>
-            <Button variant="link" className="text-primary hover:text-primary/80" onClick={() => setIsCreateModalOpen(true)}>
+            <p className="text-muted-foreground text-lg">
+              プロジェクトがまだありません
+            </p>
+            <Button
+              variant="link"
+              className="text-primary hover:text-primary/80"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
               最初のプロジェクトを作成する
             </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects?.map((project) => (
-              <Card 
-                key={project.id} 
+              <Card
+                key={project.id}
                 className="group cursor-pointer bg-card hover:bg-secondary/50 border-border hover:border-primary/20 transition-all hover:translate-y-[-2px] overflow-hidden shadow-sm hover:shadow-md"
                 onClick={() => router.push(`/projects/${project.id}`)}
               >
@@ -159,14 +182,14 @@ export default function DashboardPage() {
                     <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
                   <CardDescription className="text-muted-foreground line-clamp-2 mt-2">
-                    {project.description || '説明なし'}
+                    {project.description || "説明なし"}
                   </CardDescription>
                 </CardHeader>
                 <CardFooter className="pt-4 flex items-center gap-4 text-xs text-zinc-500">
-                   <div className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {new Date(project.created_at).toLocaleDateString('ja-JP')}
-                   </div>
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {new Date(project.created_at).toLocaleDateString("ja-JP")}
+                  </div>
                 </CardFooter>
               </Card>
             ))}

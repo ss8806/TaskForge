@@ -1,14 +1,10 @@
-from datetime import datetime, timezone
-from typing import List
-
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter
 from sqlmodel import Session, select
 
 from app.api.dependencies import CurrentUserDep, SessionDep
 from app.api.schemas import (
-    AddPointsRequest,
     AchievementResponse,
-    PointsHistoryResponse,
+    AddPointsRequest,
     UserAchievementResponse,
     UserPointsResponse,
 )
@@ -18,6 +14,7 @@ router = APIRouter(prefix="/points", tags=["points"])
 
 
 # ── User Points ─────────────────────────────────────────────────────────────
+
 
 @router.get("/me", response_model=UserPointsResponse)
 def get_my_points(
@@ -76,7 +73,8 @@ def add_points(
 
 # ── Achievements ────────────────────────────────────────────────────────────
 
-@router.get("/achievements", response_model=List[AchievementResponse])
+
+@router.get("/achievements", response_model=list[AchievementResponse])
 def list_achievements(
     session: SessionDep,
 ):
@@ -85,7 +83,7 @@ def list_achievements(
     return achievements
 
 
-@router.get("/me/achievements", response_model=List[UserAchievementResponse])
+@router.get("/me/achievements", response_model=list[UserAchievementResponse])
 def get_my_achievements(
     session: SessionDep,
     current_user: CurrentUserDep,
@@ -101,6 +99,7 @@ def get_my_achievements(
 
 # ── Leaderboard ─────────────────────────────────────────────────────────────
 
+
 @router.get("/leaderboard")
 def get_leaderboard(
     session: SessionDep,
@@ -108,9 +107,7 @@ def get_leaderboard(
 ):
     """Get top users by points."""
     users = session.exec(
-        select(User)
-        .order_by(User.total_points.desc())
-        .limit(limit)
+        select(User).order_by(User.total_points.desc()).limit(limit)
     ).all()
 
     return [
@@ -125,6 +122,7 @@ def get_leaderboard(
 
 # ── Helper Functions ─────────────────────────────────────────────────────────
 
+
 def check_and_unlock_achievements(session: Session, user: User):
     """Check and unlock achievements based on user's point total."""
     achievements = session.exec(select(Achievement)).all()
@@ -132,8 +130,7 @@ def check_and_unlock_achievements(session: Session, user: User):
     for achievement in achievements:
         # Check if user already has this achievement
         existing = session.exec(
-            select(UserAchievement)
-            .where(
+            select(UserAchievement).where(
                 UserAchievement.user_id == user.id,
                 UserAchievement.achievement_id == achievement.id,
             )

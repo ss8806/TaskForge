@@ -1,14 +1,11 @@
-from datetime import datetime, timezone
-from typing import List
-
 from fastapi import APIRouter, HTTPException, status
-from sqlmodel import select, func
+from sqlmodel import func, select
 
 from app.api.dependencies import CurrentUserDep, SessionDep
-from app.api.schemas import ProjectCreate, ProjectResponse, PaginatedResponse
+from app.api.schemas import PaginatedResponse, ProjectCreate, ProjectResponse
 from app.models import Project
-from app.utils.soft_delete import soft_delete, filter_active
 from app.utils.pagination import create_paginated_response
+from app.utils.soft_delete import filter_active, soft_delete
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -24,21 +21,18 @@ def list_projects(
     # ベースクエリ
     base_query = select(Project).where(Project.owner_id == current_user.id)
     base_query = filter_active(base_query, Project)
-    
+
     # 総件数を取得
     count_query = select(func.count()).select_from(base_query.subquery())
     total = session.exec(count_query).one()
-    
+
     # ページネーションを適用
     offset = (page - 1) * page_size
     query = base_query.offset(offset).limit(page_size)
     projects = session.exec(query).all()
-    
+
     return create_paginated_response(
-        items=projects,
-        total=total,
-        page=page,
-        page_size=page_size
+        items=projects, total=total, page=page, page_size=page_size
     )
 
 

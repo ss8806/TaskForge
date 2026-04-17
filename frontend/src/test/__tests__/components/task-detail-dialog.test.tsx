@@ -1,24 +1,24 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import TaskDetailDialog from '@/components/task-detail-dialog';
-import type { Task } from '@/types';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import TaskDetailDialog from "@/components/task-detail-dialog";
+import type { Task } from "@/types";
 
-describe('TaskDetailDialog', () => {
+describe("TaskDetailDialog", () => {
   let queryClient: QueryClient;
   const mockTask: Task = {
     id: 1,
     project_id: 1,
     sprint_id: 1,
-    title: 'Test Task',
-    description: 'A test task description',
-    status: 'todo',
+    title: "Test Task",
+    description: "A test task description",
+    status: "todo",
     priority: 2,
     start_date: null,
     end_date: null,
     estimate: 4.0,
-    created_at: '2026-03-24T00:00:00Z',
-    updated_at: '2026-03-24T00:00:00Z',
+    created_at: "2026-03-24T00:00:00Z",
+    updated_at: "2026-03-24T00:00:00Z",
   };
 
   beforeEach(() => {
@@ -39,7 +39,7 @@ describe('TaskDetailDialog', () => {
     );
   };
 
-  it('does not render when isOpen is false', () => {
+  it("does not render when isOpen is false", () => {
     renderWithQueryClient(
       <TaskDetailDialog
         task={mockTask}
@@ -49,10 +49,10 @@ describe('TaskDetailDialog', () => {
       />
     );
 
-    expect(screen.queryByText('タスク詳細')).not.toBeInTheDocument();
+    expect(screen.queryByText("タスク詳細")).not.toBeInTheDocument();
   });
 
-  it('renders when isOpen is true', () => {
+  it("renders when isOpen is true", () => {
     const mockOnClose = vi.fn();
     renderWithQueryClient(
       <TaskDetailDialog
@@ -63,12 +63,14 @@ describe('TaskDetailDialog', () => {
       />
     );
 
-    expect(screen.getByText('タスク詳細')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Test Task')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('A test task description')).toBeInTheDocument();
+    expect(screen.getByText("タスク詳細")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Test Task")).toBeInTheDocument();
+    expect(
+      screen.getByDisplayValue("A test task description")
+    ).toBeInTheDocument();
   });
 
-  it('renders all form fields with correct values', () => {
+  it("renders all form fields with correct values", () => {
     renderWithQueryClient(
       <TaskDetailDialog
         task={mockTask}
@@ -79,16 +81,18 @@ describe('TaskDetailDialog', () => {
     );
 
     // タイトル
-    expect(screen.getByDisplayValue('Test Task')).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Test Task")).toBeInTheDocument();
     // 説明
-    expect(screen.getByDisplayValue('A test task description')).toBeInTheDocument();
+    expect(
+      screen.getByDisplayValue("A test task description")
+    ).toBeInTheDocument();
     // ステータス
-    expect(screen.getByText('未着手')).toBeInTheDocument();
+    expect(screen.getByText("未着手")).toBeInTheDocument();
     // 優先度
-    expect(screen.getByText('中 (Medium)')).toBeInTheDocument();
+    expect(screen.getByText("中 (Medium)")).toBeInTheDocument();
   });
 
-  it('calls onClose when cancel button is clicked', async () => {
+  it("calls onClose when cancel button is clicked", async () => {
     const mockOnClose = vi.fn();
     renderWithQueryClient(
       <TaskDetailDialog
@@ -99,13 +103,13 @@ describe('TaskDetailDialog', () => {
       />
     );
 
-    const cancelButton = screen.getByText('キャンセル');
+    const cancelButton = screen.getByText("キャンセル");
     fireEvent.click(cancelButton);
 
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
-  it('disables save button when title is empty', () => {
+  it("disables save button when title is empty", () => {
     renderWithQueryClient(
       <TaskDetailDialog
         task={mockTask}
@@ -115,14 +119,14 @@ describe('TaskDetailDialog', () => {
       />
     );
 
-    const titleInput = screen.getByLabelText('タイトル');
-    fireEvent.change(titleInput, { target: { value: '' } });
+    const titleInput = screen.getByLabelText("タイトル");
+    fireEvent.change(titleInput, { target: { value: "" } });
 
-    const saveButton = screen.getByText('保存');
+    const saveButton = screen.getByText("保存");
     expect(saveButton).toBeDisabled();
   });
 
-  it('shows correct status options', () => {
+  it("shows correct status options", () => {
     renderWithQueryClient(
       <TaskDetailDialog
         task={mockTask}
@@ -133,15 +137,15 @@ describe('TaskDetailDialog', () => {
     );
 
     // ステータスセレクターを開く
-    const statusSelect = screen.getByLabelText('ステータス').closest('button');
+    const statusSelect = screen.getByLabelText("ステータス").closest("button");
     fireEvent.click(statusSelect);
 
-    expect(screen.getByText('未着手')).toBeInTheDocument();
-    expect(screen.getByText('進行中')).toBeInTheDocument();
-    expect(screen.getByText('完了')).toBeInTheDocument();
+    expect(screen.getByText("未着手")).toBeInTheDocument();
+    expect(screen.getByText("進行中")).toBeInTheDocument();
+    expect(screen.getByText("完了")).toBeInTheDocument();
   });
 
-  it('shows correct priority options', () => {
+  it("shows correct priority options", () => {
     renderWithQueryClient(
       <TaskDetailDialog
         task={mockTask}
@@ -152,19 +156,19 @@ describe('TaskDetailDialog', () => {
     );
 
     // 優先度セレクターを開く
-    const prioritySelect = screen.getByLabelText('優先度').closest('button');
+    const prioritySelect = screen.getByLabelText("優先度").closest("button");
     fireEvent.click(prioritySelect);
 
-    expect(screen.getByText('低')).toBeInTheDocument();
-    expect(screen.getByText('中')).toBeInTheDocument();
-    expect(screen.getByText('高')).toBeInTheDocument();
+    expect(screen.getByText("低")).toBeInTheDocument();
+    expect(screen.getByText("中")).toBeInTheDocument();
+    expect(screen.getByText("高")).toBeInTheDocument();
   });
 
-  it('renders date fields correctly', () => {
+  it("renders date fields correctly", () => {
     const taskWithDates: Task = {
       ...mockTask,
-      start_date: '2026-03-24T00:00:00Z',
-      end_date: '2026-03-30T00:00:00Z',
+      start_date: "2026-03-24T00:00:00Z",
+      end_date: "2026-03-30T00:00:00Z",
     };
 
     renderWithQueryClient(
@@ -176,14 +180,14 @@ describe('TaskDetailDialog', () => {
       />
     );
 
-    const startInput = screen.getByLabelText('開始日');
-    const endInput = screen.getByLabelText('終了日');
+    const startInput = screen.getByLabelText("開始日");
+    const endInput = screen.getByLabelText("終了日");
 
-    expect(startInput).toHaveValue('2026-03-24');
-    expect(endInput).toHaveValue('2026-03-30');
+    expect(startInput).toHaveValue("2026-03-24");
+    expect(endInput).toHaveValue("2026-03-30");
   });
 
-  it('renders estimate field correctly', () => {
+  it("renders estimate field correctly", () => {
     renderWithQueryClient(
       <TaskDetailDialog
         task={mockTask}
@@ -193,11 +197,11 @@ describe('TaskDetailDialog', () => {
       />
     );
 
-    const estimateInput = screen.getByLabelText('見積もり (h)');
-    expect(estimateInput).toHaveValue('4');
+    const estimateInput = screen.getByLabelText("見積もり (h)");
+    expect(estimateInput).toHaveValue("4");
   });
 
-  it('handles new task (no existing task)', () => {
+  it("handles new task (no existing task)", () => {
     renderWithQueryClient(
       <TaskDetailDialog
         task={null}
@@ -208,6 +212,6 @@ describe('TaskDetailDialog', () => {
     );
 
     // 新規タスクの場合はダイアログが表示されない
-    expect(screen.queryByText('タスク詳細')).not.toBeInTheDocument();
+    expect(screen.queryByText("タスク詳細")).not.toBeInTheDocument();
   });
 });

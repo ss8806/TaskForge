@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -14,16 +14,16 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { authApi } from '@/lib/api';
-import { useAuthStore } from '@/hooks/use-auth-store';
-import { Loader2, Sparkles } from 'lucide-react';
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { authApi } from "@/lib/api";
+import { useAuthStore } from "@/hooks/use-auth-store";
+import { Loader2, Sparkles } from "lucide-react";
 
 const loginSchema = z.object({
-  email: z.string().email('有効なメールアドレスを入力してください'),
-  password: z.string().min(6, 'パスワードは6文字以上で入力してください'),
+  email: z.string().email("有効なメールアドレスを入力してください"),
+  password: z.string().min(6, "パスワードは6文字以上で入力してください"),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -37,8 +37,8 @@ export default function LoginPage() {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
   });
 
@@ -48,9 +48,9 @@ export default function LoginPage() {
     try {
       const response = await authApi.login(data.email, data.password);
       setToken(response.access_token);
-      router.push('/dashboard');
+      router.push("/dashboard");
     } catch (err: any) {
-      setError(err.message || 'ログインに失敗しました');
+      setError(err.message || "ログインに失敗しました");
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +66,9 @@ export default function LoginPage() {
               <Sparkles className="h-6 w-6 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight text-foreground">おかえりなさい</CardTitle>
+          <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
+            おかえりなさい
+          </CardTitle>
           <CardDescription className="text-muted-foreground">
             TaskForgeのアカウントにログインしてください
           </CardDescription>
@@ -79,43 +81,54 @@ export default function LoginPage() {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground/80">メールアドレス</Label>
+              <Label htmlFor="email" className="text-foreground/80">
+                メールアドレス
+              </Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="name@example.com"
-                {...form.register('email')}
+                {...form.register("email")}
                 className="bg-background border-border text-foreground focus:ring-primary/20"
               />
               {form.formState.errors.email && (
-                <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.email.message}
+                </p>
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-foreground/80">パスワード</Label>
+              <Label htmlFor="password" className="text-foreground/80">
+                パスワード
+              </Label>
               <Input
                 id="password"
                 type="password"
-                {...form.register('password')}
+                {...form.register("password")}
                 className="bg-background border-border text-foreground focus:ring-primary/20"
               />
               {form.formState.errors.password && (
-                <p className="text-xs text-destructive">{form.formState.errors.password.message}</p>
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.password.message}
+                </p>
               )}
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button 
-                type="submit" 
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all font-semibold rounded-xl h-11"
-                disabled={isLoading}
+            <Button
+              type="submit"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all font-semibold rounded-xl h-11"
+              disabled={isLoading}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               ログイン
             </Button>
             <div className="text-center text-sm text-muted-foreground">
-              アカウントをお持ちでないですか？{' '}
-              <Link href="/register" className="text-primary hover:underline underline-offset-4 transition-colors">
+              アカウントをお持ちでないですか？{" "}
+              <Link
+                href="/register"
+                className="text-primary hover:underline underline-offset-4 transition-colors"
+              >
                 新規登録
               </Link>
             </div>

@@ -1,15 +1,14 @@
-from typing import List
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from sqlmodel import select
 
-from app.api.dependencies import SessionDep, AdminDep
-from app.api.schemas import UserResponse, ProjectResponse
-from app.models import User, Project
+from app.api.dependencies import AdminDep, SessionDep
+from app.api.schemas import ProjectResponse, UserResponse
+from app.models import Project, User
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 
-@router.get("/users", response_model=List[UserResponse])
+@router.get("/users", response_model=list[UserResponse])
 def list_users(
     session: SessionDep,
     admin_user: AdminDep,
@@ -21,7 +20,7 @@ def list_users(
     return users
 
 
-@router.get("/projects", response_model=List[ProjectResponse])
+@router.get("/projects", response_model=list[ProjectResponse])
 def list_all_projects(
     session: SessionDep,
     admin_user: AdminDep,
@@ -45,12 +44,12 @@ def make_user_admin(
     user = session.get(User, user_id)
     if not user:
         return {"detail": "User not found"}
-    
+
     user.role = "admin"
     session.add(user)
     session.commit()
     session.refresh(user)
-    
+
     return {"detail": f"User {user.email} promoted to admin"}
 
 
@@ -66,14 +65,14 @@ def revoke_user_admin(
     # 自分自身の管理者権限を剥奪できないようにチェック
     if user_id == admin_user.id:
         return {"detail": "Cannot revoke your own admin privileges"}
-    
+
     user = session.get(User, user_id)
     if not user:
         return {"detail": "User not found"}
-    
+
     user.role = "user"
     session.add(user)
     session.commit()
     session.refresh(user)
-    
+
     return {"detail": f"User {user.email} admin privileges revoked"}

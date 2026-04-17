@@ -1,15 +1,16 @@
 """認証APIのテスト。"""
+
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
-from app.core.security import create_access_token, verify_password, hash_password
+from app.core.security import create_access_token, hash_password, verify_password
 
 
 def test_register(client: TestClient, session: Session):
     """ユーザー登録のテスト。"""
     response = client.post(
         "/api/auth/register",
-        json={"email": "test@example.com", "password": "testpassword123"}
+        json={"email": "test@example.com", "password": "testpassword123"},
     )
     assert response.status_code == 201
     data = response.json()
@@ -22,12 +23,12 @@ def test_register_duplicate_email(client: TestClient, session: Session):
     # 最初のユーザー登録
     client.post(
         "/api/auth/register",
-        json={"email": "test@example.com", "password": "testpassword123"}
+        json={"email": "test@example.com", "password": "testpassword123"},
     )
     # 重複登録
     response = client.post(
         "/api/auth/register",
-        json={"email": "test@example.com", "password": "testpassword456"}
+        json={"email": "test@example.com", "password": "testpassword456"},
     )
     assert response.status_code == 409
     data = response.json()
@@ -38,7 +39,7 @@ def test_register_invalid_email(client: TestClient):
     """無効なメールアドレスでの登録失敗テスト。"""
     response = client.post(
         "/api/auth/register",
-        json={"email": "invalid-email", "password": "testpassword123"}
+        json={"email": "invalid-email", "password": "testpassword123"},
     )
     assert response.status_code == 422
 
@@ -46,13 +47,13 @@ def test_register_invalid_email(client: TestClient):
 def test_login_success(client: TestClient, session: Session):
     """正常なログインのテスト。"""
     # ユーザー作成
-    from app.models import User
     from app.core.security import hash_password
+    from app.models import User
 
     user = User(
         email="test@example.com",
         password_hash=hash_password("testpassword123"),
-        role="user"
+        role="user",
     )
     session.add(user)
     session.commit()
@@ -60,7 +61,7 @@ def test_login_success(client: TestClient, session: Session):
     # ログイン
     response = client.post(
         "/api/auth/login",
-        json={"email": "test@example.com", "password": "testpassword123"}
+        json={"email": "test@example.com", "password": "testpassword123"},
     )
     assert response.status_code == 200
     data = response.json()
@@ -72,7 +73,7 @@ def test_login_invalid_email(client: TestClient):
     """無効なメールアドレスでのログイン失敗テスト。"""
     response = client.post(
         "/api/auth/login",
-        json={"email": "nonexistent@example.com", "password": "testpassword123"}
+        json={"email": "nonexistent@example.com", "password": "testpassword123"},
     )
     assert response.status_code == 401
 
@@ -80,13 +81,13 @@ def test_login_invalid_email(client: TestClient):
 def test_login_invalid_password(client: TestClient, session: Session):
     """無効なパスワードでのログイン失敗テスト。"""
     # ユーザー作成
-    from app.models import User
     from app.core.security import hash_password
+    from app.models import User
 
     user = User(
         email="test@example.com",
         password_hash=hash_password("correctpassword"),
-        role="user"
+        role="user",
     )
     session.add(user)
     session.commit()
@@ -94,7 +95,7 @@ def test_login_invalid_password(client: TestClient, session: Session):
     # 間違ったパスワードでログイン
     response = client.post(
         "/api/auth/login",
-        json={"email": "test@example.com", "password": "wrongpassword"}
+        json={"email": "test@example.com", "password": "wrongpassword"},
     )
     assert response.status_code == 401
 

@@ -1,12 +1,12 @@
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 from app.core.security import decode_access_token
 from app.db.session import get_session
-from app.models import User, Project
+from app.models import Project, User
 
 # Reexport for convenience
 SessionDep = Annotated[Session, Depends(get_session)]

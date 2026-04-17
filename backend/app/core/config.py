@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
     JWT_SECRET_KEY: str = Field(
         min_length=64,
-        description="JWT secret key - must be at least 64 characters. Generate with: openssl rand -base64 64"
+        description="JWT secret key - must be at least 64 characters. Generate with: openssl rand -base64 64",
     )
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours

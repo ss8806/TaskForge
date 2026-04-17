@@ -24,7 +24,7 @@ export default function AdminLayout({
         const response = await fetch("http://localhost:8000/api/admin/users", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        
+
         if (response.status === 403) {
           router.push("/dashboard");
         }
@@ -35,7 +35,7 @@ export default function AdminLayout({
     };
 
     checkAdminAccess();
-  },[router]);
+  }, [router]);
 
   return (
     <ConfigProvider

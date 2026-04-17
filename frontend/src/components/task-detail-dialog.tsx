@@ -1,30 +1,30 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { tasksApi, sprintsApi } from '@/lib/api';
-import { Task, Sprint, TaskStatus, TaskPriority } from '@/types';
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { tasksApi, sprintsApi } from "@/lib/api";
+import { Task, Sprint, TaskStatus, TaskPriority } from "@/types";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Loader2, Trash2, Calendar, Clock, AlertCircle } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/select";
+import { Loader2, Trash2, Calendar, Clock, AlertCircle } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface TaskDetailDialogProps {
   task: Task | null;
@@ -33,21 +33,26 @@ interface TaskDetailDialogProps {
   projectId: number;
 }
 
-export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetailDialogProps) {
+export function TaskDetailDialog({
+  task,
+  isOpen,
+  onClose,
+  projectId,
+}: TaskDetailDialogProps) {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    status: 'todo' as TaskStatus,
+    title: "",
+    description: "",
+    status: "todo" as TaskStatus,
     priority: 2 as TaskPriority,
-    start_date: '',
-    end_date: '',
-    estimate: '',
-    sprint_id: 'none' as string | number,
+    start_date: "",
+    end_date: "",
+    estimate: "",
+    sprint_id: "none" as string | number,
   });
 
   const { data: sprints } = useQuery({
-    queryKey: ['projects', projectId, 'sprints'],
+    queryKey: ["projects", projectId, "sprints"],
     queryFn: () => sprintsApi.list(projectId).then((res) => res.data),
     enabled: !!projectId,
   });
@@ -55,14 +60,18 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
   useEffect(() => {
     if (task) {
       setFormData({
-        title: task.title || '',
-        description: task.description || '',
+        title: task.title || "",
+        description: task.description || "",
         status: task.status,
         priority: task.priority,
-        start_date: task.start_date ? format(new Date(task.start_date), 'yyyy-MM-dd') : '',
-        end_date: task.end_date ? format(new Date(task.end_date), 'yyyy-MM-dd') : '',
-        estimate: task.estimate?.toString() || '',
-        sprint_id: task.sprint_id ?? 'none',
+        start_date: task.start_date
+          ? format(new Date(task.start_date), "yyyy-MM-dd")
+          : "",
+        end_date: task.end_date
+          ? format(new Date(task.end_date), "yyyy-MM-dd")
+          : "",
+        estimate: task.estimate?.toString() || "",
+        sprint_id: task.sprint_id ?? "none",
       });
     }
   }, [task]);
@@ -70,7 +79,9 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
   const updateMutation = useMutation({
     mutationFn: (data: any) => tasksApi.update(task!.id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'tasks'] });
+      queryClient.invalidateQueries({
+        queryKey: ["projects", projectId, "tasks"],
+      });
       onClose();
     },
   });
@@ -78,7 +89,9 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
   const deleteMutation = useMutation({
     mutationFn: () => tasksApi.delete(task!.id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'tasks'] });
+      queryClient.invalidateQueries({
+        queryKey: ["projects", projectId, "tasks"],
+      });
       onClose();
     },
   });
@@ -88,9 +101,14 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
     const data = {
       ...formData,
       estimate: formData.estimate ? parseFloat(formData.estimate) : null,
-      sprint_id: formData.sprint_id === 'none' ? null : Number(formData.sprint_id),
-      start_date: formData.start_date ? new Date(formData.start_date).toISOString() : null,
-      end_date: formData.end_date ? new Date(formData.end_date).toISOString() : null,
+      sprint_id:
+        formData.sprint_id === "none" ? null : Number(formData.sprint_id),
+      start_date: formData.start_date
+        ? new Date(formData.start_date).toISOString()
+        : null,
+      end_date: formData.end_date
+        ? new Date(formData.end_date).toISOString()
+        : null,
     };
     updateMutation.mutate(data);
   };
@@ -112,7 +130,9 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
             <Input
               id="edit-title"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, title: e.target.value })
+              }
               className="bg-background border-border text-foreground focus:ring-primary/20"
             />
           </div>
@@ -122,7 +142,9 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
             <Textarea
               id="edit-desc"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               className="bg-background border-border text-foreground focus:ring-primary/20 min-h-[100px]"
             />
           </div>
@@ -132,7 +154,9 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
               <Label>ステータス</Label>
               <Select
                 value={formData.status}
-                onValueChange={(val) => setFormData({ ...formData, status: val as TaskStatus })}
+                onValueChange={(val) =>
+                  setFormData({ ...formData, status: val as TaskStatus })
+                }
               >
                 <SelectTrigger className="bg-background border-border">
                   <SelectValue />
@@ -149,7 +173,12 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
               <Label>優先度</Label>
               <Select
                 value={formData.priority.toString()}
-                onValueChange={(val) => setFormData({ ...formData, priority: parseInt(val) as TaskPriority })}
+                onValueChange={(val) =>
+                  setFormData({
+                    ...formData,
+                    priority: parseInt(val) as TaskPriority,
+                  })
+                }
               >
                 <SelectTrigger className="bg-background border-border">
                   <SelectValue />
@@ -170,7 +199,9 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
                 id="edit-start"
                 type="date"
                 value={formData.start_date}
-                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, start_date: e.target.value })
+                }
                 className="bg-zinc-800 border-zinc-700"
               />
             </div>
@@ -180,7 +211,9 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
                 id="edit-end"
                 type="date"
                 value={formData.end_date}
-                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, end_date: e.target.value })
+                }
                 className="bg-zinc-800 border-zinc-700"
               />
             </div>
@@ -194,7 +227,9 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
                 type="number"
                 step="0.5"
                 value={formData.estimate}
-                onChange={(e) => setFormData({ ...formData, estimate: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, estimate: e.target.value })
+                }
                 className="bg-background border-border text-foreground focus:ring-primary/20"
               />
             </div>
@@ -202,7 +237,12 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
               <Label>スプリント</Label>
               <Select
                 value={formData.sprint_id?.toString()}
-                onValueChange={(val) => setFormData({ ...formData, sprint_id: val === 'none' ? 'none' : parseInt(val) })}
+                onValueChange={(val) =>
+                  setFormData({
+                    ...formData,
+                    sprint_id: val === "none" ? "none" : parseInt(val),
+                  })
+                }
               >
                 <SelectTrigger className="bg-background border-border">
                   <SelectValue placeholder="スプリントなし" />
@@ -225,13 +265,17 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
             variant="ghost"
             className="text-rose-500 hover:text-rose-400 hover:bg-rose-500/10"
             onClick={() => {
-              if (confirm('このタスクを削除しますか？')) {
+              if (confirm("このタスクを削除しますか？")) {
                 deleteMutation.mutate();
               }
             }}
             disabled={deleteMutation.isPending}
           >
-            {deleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+            {deleteMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
             <span className="ml-2">削除</span>
           </Button>
           <div className="flex gap-2">
@@ -243,7 +287,9 @@ export function TaskDetailDialog({ task, isOpen, onClose, projectId }: TaskDetai
               onClick={handleSave}
               disabled={updateMutation.isPending || !formData.title.trim()}
             >
-              {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {updateMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               保存
             </Button>
           </div>

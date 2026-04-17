@@ -1,7 +1,6 @@
-import bcrypt
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
+import bcrypt
 from jose import JWTError, jwt
 
 from app.core.config import settings
@@ -25,7 +24,7 @@ def create_access_token(subject: int, email: str, role: str = "user") -> str:
     if not settings.JWT_SECRET_KEY:
         raise ValueError("JWT_SECRET_KEY is not configured")
 
-    expire = datetime.now(timezone.utc) + timedelta(
+    expire = datetime.now(UTC) + timedelta(
         minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
     )
     payload = {
@@ -39,7 +38,7 @@ def create_access_token(subject: int, email: str, role: str = "user") -> str:
     )
 
 
-def decode_access_token(token: str) -> Optional[dict]:
+def decode_access_token(token: str) -> dict | None:
     try:
         payload = jwt.decode(
             token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]

@@ -1,8 +1,9 @@
 """
 Celery タスク定義
 """
+
 import logging
-from typing import Optional
+
 from celery import shared_task
 from celery.result import AsyncResult
 
@@ -13,43 +14,41 @@ logger = logging.getLogger(__name__)
 
 
 @shared_task(bind=True, name="ai.decompose_tasks")
-def decompose_tasks_async(self, project_id: int, user_requirement: str, sprint_id: Optional[int] = None):
+def decompose_tasks_async(
+    self, project_id: int, user_requirement: str, sprint_id: int | None = None
+):
     """
     非同期でAIタスク分解を実行
-    
+
     Args:
         project_id: プロジェクトID
         user_requirement: ユーザーからの要件入力
         sprint_id: タスクを追加するスプリントID（任意）
-        
+
     Returns:
         dict: 分解結果
     """
     import asyncio
-    
+
     logger.info(f"Starting AI decomposition for project {project_id}")
-    
+
     # タスク状態を更新
     self.update_state(
-        state="PROCESSING",
-        meta={"project_id": project_id, "progress": 0}
+        state="PROCESSING", meta={"project_id": project_id, "progress": 0}
     )
-    
+
     try:
         # 非同期関数を同期的に実行
         result = asyncio.run(run_ai_decomposition(user_requirement))
-        
+
         if result.get("error"):
-            self.update_state(
-                state="FAILED",
-                meta={"error": result["error"]}
-            )
+            self.update_state(state="FAILED", meta={"error": result["error"]})
             return {"status": "failed", "error": result["error"]}
-        
+
         # 結果をDBに保存
         from app.db.session import get_session_context
-        from app.models import Task, Sprint
-        
+        from app.models import Sprint, Task
+
         with get_session_context() as session:
             # スプリントを作成
             sprint_map = {}
@@ -61,7 +60,7 @@ def decompose_tasks_async(self, project_id: int, user_requirement: str, sprint_i
                 session.add(sprint)
                 session.flush()
                 sprint_map[sprint_data["name"]] = sprint.id
-            
+
             # タスクを作成
             for idx, task_data in enumerate(result.get("tasks", [])):
                 # スプリントIDを決定
@@ -71,7 +70,7 @@ def decompose_tasks_async(self, project_id: int, user_requirement: str, sprint_i
                         if idx in sprint_data.get("tasks", []):
                             task_sprint_id = sprint_map.get(sprint_data["name"])
                             break
-                
+
                 task = Task(
                     project_id=project_id,
                     sprint_id=task_sprint_id,
@@ -82,11 +81,11 @@ def decompose_tasks_async(self, project_id: int, user_requirement: str, sprint_i
                     status="todo",
                 )
                 session.add(task)
-            
+
             session.commit()
-        
+
         logger.info(f"AI decomposition completed for project {project_id}")
-        
+
         return {
             "status": "completed",
             "project_id": project_id,
@@ -94,33 +93,30 @@ def decompose_tasks_async(self, project_id: int, user_requirement: str, sprint_i
             "tasks_count": len(result.get("tasks", [])),
             "sprints_count": len(result.get("sprints", [])),
         }
-        
+
     except Exception as e:
         logger.error(f"AI decomposition failed: {str(e)}")
-        self.update_state(
-            state="FAILED",
-            meta={"error": str(e)}
-        )
+        self.update_state(state="FAILED", meta={"error": str(e)})
         return {"status": "failed", "error": str(e)}
 
 
 def get_task_status(task_id: str) -> dict:
     """
     タスクのステータスを取得
-    
+
     Args:
         task_id: CeleryタスクID
-        
+
     Returns:
         dict: タスクのステータス情報
     """
     task = AsyncResult(task_id, app=celery_app)
-    
+
     response = {
         "task_id": task_id,
         "status": task.state,
     }
-    
+
     if task.state == "PENDING":
         response["message"] = "タスクがキューに入っています"
     elif task.state == "PROCESSING":
@@ -134,5 +130,5 @@ def get_task_status(task_id: str) -> dict:
         response["message"] = "タスクが失敗しました"
     else:
         response["message"] = f"不明なステータス: {task.state}"
-    
+
     return response

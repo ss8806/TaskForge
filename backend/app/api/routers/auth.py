@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Request
+from fastapi import APIRouter, HTTPException, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlmodel import select
@@ -54,7 +54,7 @@ def login(request: Request, body: LoginRequest, session: SessionDep):
             detail="Invalid email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     # パスワード検証
     if not verify_password(body.password, user.password_hash):
         raise HTTPException(
@@ -62,13 +62,13 @@ def login(request: Request, body: LoginRequest, session: SessionDep):
             detail="Invalid email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     # JWTトークン生成
     if user.id is None:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="User ID is None",
         )
-    
+
     token = create_access_token(subject=user.id, email=user.email, role=user.role)
     return TokenResponse(access_token=token)

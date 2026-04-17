@@ -38,26 +38,32 @@ export default function AdminPage() {
 
       try {
         // ユーザーデータ取得
-        const usersResponse = await fetch("http://localhost:8000/api/admin/users", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        
+        const usersResponse = await fetch(
+          "http://localhost:8000/api/admin/users",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
         if (usersResponse.status === 403) {
           message.error("管理者権限がありません");
           router.push("/dashboard");
           return;
         }
-        
+
         if (usersResponse.ok) {
           const usersData = await usersResponse.json();
           setUsers(usersData);
         }
 
         // プロジェクトデータ取得
-        const projectsResponse = await fetch("http://localhost:8000/api/admin/projects", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        
+        const projectsResponse = await fetch(
+          "http://localhost:8000/api/admin/projects",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
         if (projectsResponse.ok) {
           const projectsData = await projectsResponse.json();
           setProjects(projectsData);
@@ -160,20 +166,26 @@ export default function AdminPage() {
   const handleMakeAdmin = async (userId: number) => {
     const token = localStorage.getItem("access_token");
     try {
-      const response = await fetch(`http://localhost:8000/api/admin/users/${userId}/make-admin`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      
+      const response = await fetch(
+        `http://localhost:8000/api/admin/users/${userId}/make-admin`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
       if (response.ok) {
         message.success("ユーザーを管理者に昇格しました");
         // データ再取得
-        const usersResponse = await fetch("http://localhost:8000/api/admin/users", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const usersResponse = await fetch(
+          "http://localhost:8000/api/admin/users",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         if (usersResponse.ok) {
           const usersData = await usersResponse.json();
           setUsers(usersData);
@@ -189,20 +201,26 @@ export default function AdminPage() {
   const handleRevokeAdmin = async (userId: number) => {
     const token = localStorage.getItem("access_token");
     try {
-      const response = await fetch(`http://localhost:8000/api/admin/users/${userId}/revoke-admin`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      
+      const response = await fetch(
+        `http://localhost:8000/api/admin/users/${userId}/revoke-admin`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
       if (response.ok) {
         message.success("管理者権限を剥奪しました");
         // データ再取得
-        const usersResponse = await fetch("http://localhost:8000/api/admin/users", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const usersResponse = await fetch(
+          "http://localhost:8000/api/admin/users",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         if (usersResponse.ok) {
           const usersData = await usersResponse.json();
           setUsers(usersData);
@@ -221,7 +239,9 @@ export default function AdminPage() {
   };
 
   if (loading) {
-    return <div style={{ padding: "24px", textAlign: "center" }}>読み込み中...</div>;
+    return (
+      <div style={{ padding: "24px", textAlign: "center" }}>読み込み中...</div>
+    );
   }
 
   return (
@@ -229,7 +249,13 @@ export default function AdminPage() {
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
         <Card>
           <Space direction="vertical" style={{ width: "100%" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <Title level={2}>管理者ダッシュボード</Title>
               <Button danger onClick={handleLogout}>
                 ログアウト
@@ -263,7 +289,9 @@ export default function AdminPage() {
           <Space direction="vertical">
             <Text>総ユーザー数: {users.length}人</Text>
             <Text>総プロジェクト数: {projects.length}件</Text>
-            <Text>管理者数: {users.filter(u => u.role === "admin").length}人</Text>
+            <Text>
+              管理者数: {users.filter((u) => u.role === "admin").length}人
+            </Text>
           </Space>
         </Card>
       </Space>
