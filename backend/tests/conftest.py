@@ -3,10 +3,16 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 
+from app.core.security import create_access_token, hash_password
 from app.db.session import get_session
 from app.main import app
 from app.models import User
-from tests.factories import UserFactory
+from tests.factories import (
+    ProjectFactory,
+    SprintFactory,
+    TaskFactory,
+    UserFactory,
+)
 
 
 @pytest.fixture(name="session")
@@ -18,7 +24,17 @@ def session_fixture():
     )
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
+        # ファクトリにセッションを設定
+        UserFactory._meta.sqlalchemy_session = session
+        ProjectFactory._meta.sqlalchemy_session = session
+        SprintFactory._meta.sqlalchemy_session = session
+        TaskFactory._meta.sqlalchemy_session = session
         yield session
+        # テスト終了後にセッションをクリア
+        UserFactory._meta.sqlalchemy_session = None
+        ProjectFactory._meta.sqlalchemy_session = None
+        SprintFactory._meta.sqlalchemy_session = None
+        TaskFactory._meta.sqlalchemy_session = None
 
 
 @pytest.fixture(name="client")
@@ -35,30 +51,46 @@ def client_fixture(session: Session):
 @pytest.fixture
 def user(session: Session) -> User:
     """通常ユーザーフィクスチャ。"""
-    return UserFactory(session=session, email="testuser@example.com", name="Test User")
+    return UserFactory(email="testuser@example.com")
 
 
 @pytest.fixture
 def admin_user(session: Session) -> User:
     """管理者ユーザーフィクスチャ。"""
-    return UserFactory(
-        session=session, email="admin@example.com", name="Admin User", role="admin"
-    )
+    return UserFactory(email="admin@example.com", role="admin")
+
+
+def _make_auth_headers(user: User) -> dict:
+    """ユーザーから認証ヘッダーを直接生成するヘルパー。レート制限を回避する。"""
+    token = create_access_token(subject=user.id, email=user.email, role=user.role)
+    return {"Authorization": f"Bearer {token}"}
 
 
 @pytest.fixture
 def auth_headers(client: TestClient, session: Session) -> dict:
     """認証済みリクエスト用ヘッダーフィクスチャ。"""
-    UserFactory(
-        session=session,
+    user = User(
         email="auth-test@example.com",
-        name="Auth Test User",
-        password_hash="$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",  # testpassword123
+        password_hash=hash_password("testpassword123"),
+        role="user",
     )
+    session.add(user)
+    session.commit()
+    session.refresh(user)
 
-    response = client.post(
-        "/api/auth/login",
-        json={"email": "auth-test@example.com", "password": "testpassword123"},
+    return _make_auth_headers(user)
+
+
+@pytest.fixture
+def admin_auth_headers(client: TestClient, session: Session) -> dict:
+    """管理者認証済みリクエスト用ヘッダーフィクスチャ。"""
+    admin = User(
+        email="admin-test@example.com",
+        password_hash=hash_password("testpassword123"),
+        role="admin",
     )
-    token = response.json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}
+    session.add(admin)
+    session.commit()
+    session.refresh(admin)
+
+    return _make_auth_headers(admin)

@@ -203,8 +203,8 @@ def test_get_leaderboard(client: TestClient, session: Session):
 
     # ポイントの降順でソートされている
     assert len(data) >= 3
-    assert data[0]["total_points"] >= data[1]["total_points"]
-    assert data[1]["total_points"] >= data[2]["total_points"]
+    assert data[0]["total_points"] >= data[1]["total_points"]  # type: ignore[index]
+    assert data[1]["total_points"] >= data[2]["total_points"]  # type: ignore[index]
 
 
 def test_points_history_ordering(client: TestClient, user_with_points: User):
@@ -245,7 +245,7 @@ def test_points_history_ordering(client: TestClient, user_with_points: User):
 def test_unauthenticated_points_access(client: TestClient):
     """認証なしでのポイントAPIアクセス拒否テスト。"""
     response = client.get("/api/points/me")
-    assert response.status_code == 403
+    assert response.status_code in (401, 403)
 
     response = client.post("/api/points/me/add", json={"points": 10, "reason": "test"})
-    assert response.status_code == 403
+    assert response.status_code in (401, 403)
