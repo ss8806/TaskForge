@@ -4,6 +4,7 @@ from sqlmodel import select
 from app.api.dependencies import CurrentUserDep, SessionDep, verify_project_access
 from app.api.schemas import SprintCreate, SprintResponse
 from app.models import Sprint
+from app.utils.soft_delete import filter_active, soft_delete
 
 router = APIRouter(tags=["sprints"])
 
@@ -17,12 +18,9 @@ def list_sprints(
     offset: int = 0,
 ):
     verify_project_access(project_id, current_user, session)
-    sprints = session.exec(
-        select(Sprint)
-        .where(Sprint.project_id == project_id)
-        .offset(offset)
-        .limit(limit)
-    ).all()
+    base_query = select(Sprint).where(Sprint.project_id == project_id)
+    base_query = filter_active(base_query, Sprint)
+    sprints = session.exec(base_query.offset(offset).limit(limit)).all()
     return sprints
 
 
@@ -60,16 +58,15 @@ def delete_sprint(
     session: SessionDep,
     current_user: CurrentUserDep,
 ):
-    """スプリント削除"""
+    """スプリント削除（ソフトデリート）"""
     verify_project_access(project_id, current_user, session)
     sprint = session.get(Sprint, sprint_id)
-    if not sprint or sprint.project_id != project_id:
+    if not sprint or sprint.project_id != project_id or sprint.deleted_at is not None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Sprint not found"
         )
     try:
-        session.delete(sprint)
-        session.commit()
+        soft_delete(session, sprint)
     except Exception:
         session.rollback()
         raise
@@ -89,7 +86,7 @@ def update_sprint(
     """スプリント更新"""
     verify_project_access(project_id, current_user, session)
     sprint = session.get(Sprint, sprint_id)
-    if not sprint or sprint.project_id != project_id:
+    if not sprint or sprint.project_id != project_id or sprint.deleted_at is not None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Sprint not found"
         )

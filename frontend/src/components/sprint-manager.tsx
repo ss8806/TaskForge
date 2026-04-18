@@ -32,7 +32,7 @@ export function SprintManager({ projectId }: SprintManagerProps) {
 
   const { data: sprints, isLoading } = useQuery({
     queryKey: ["projects", projectId, "sprints"],
-    queryFn: () => sprintsApi.list(projectId).then((res) => res.data),
+    queryFn: () => sprintsApi.list(projectId),
   });
 
   const createMutation = useMutation({

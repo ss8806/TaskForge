@@ -236,7 +236,7 @@ def test_update_sprint_forbidden_project(
 
 
 def test_delete_sprint(client: TestClient, auth_headers: dict, session: Session):
-    """スプリント削除テスト"""
+    """スプリント削除テスト（ソフトデリート）"""
     project = _create_project_for_auth_user(session)
 
     sprint = Sprint(name="Delete Me", project_id=project.id)
@@ -251,9 +251,10 @@ def test_delete_sprint(client: TestClient, auth_headers: dict, session: Session)
 
     assert response.status_code == 204
 
-    # 削除確認
+    # ソフトデリート確認 - deleted_at が設定されている
     deleted = session.get(Sprint, sprint.id)
-    assert deleted is None
+    assert deleted is not None
+    assert deleted.deleted_at is not None
 
 
 def test_delete_sprint_not_found(
