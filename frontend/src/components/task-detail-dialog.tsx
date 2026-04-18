@@ -202,7 +202,7 @@ export function TaskDetailDialog({
                 onChange={(e) =>
                   setFormData({ ...formData, start_date: e.target.value })
                 }
-                className="bg-zinc-800 border-zinc-700"
+                className="bg-background border-border"
               />
             </div>
             <div className="space-y-2">
@@ -214,7 +214,7 @@ export function TaskDetailDialog({
                 onChange={(e) =>
                   setFormData({ ...formData, end_date: e.target.value })
                 }
-                className="bg-zinc-800 border-zinc-700"
+                className="bg-background border-border"
               />
             </div>
           </div>
