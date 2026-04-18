@@ -158,14 +158,6 @@ export default function ProjectPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-transparent border-zinc-800 text-zinc-400 hover:text-zinc-100 hidden sm:flex"
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              設定
-            </Button>
             <Dialog open={isTaskModalOpen} onOpenChange={setIsTaskModalOpen}>
               <DialogTrigger asChild>
                 <Button
@@ -246,7 +238,6 @@ export default function ProjectPage() {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-
             <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
               <DialogTrigger asChild>
                 <Button
@@ -305,7 +296,6 @@ export default function ProjectPage() {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-
             <Dialog>
               <DialogTrigger asChild>
                 <Button
@@ -329,6 +319,14 @@ export default function ProjectPage() {
                 </div>
               </DialogContent>
             </Dialog>
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-transparent border-zinc-800 text-zinc-400 hover:text-zinc-100 hidden sm:flex"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              設定
+            </Button>
           </div>
         </div>
       </header>
