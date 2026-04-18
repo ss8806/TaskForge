@@ -3,19 +3,23 @@
 """
 
 from fastapi.testclient import TestClient
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.core.security import hash_password
 from app.models import Project, Task, User
 
 
+def _get_auth_user(session: Session) -> User:
+    """auth_headers フィクスチャで作成されたユーザーを取得するヘルパー。"""
+    user = session.exec(
+        select(User).where(User.email == "auth-test@example.com")
+    ).first()
+    return user
+
+
 def test_create_task(client: TestClient, auth_headers: dict, session: Session):
     """タスク作成テスト"""
-    from app.models import User
-
-    user = session.exec(
-        session.query(User).where(User.email == "test@example.com")
-    ).first()
+    user = _get_auth_user(session)
 
     project = Project(name="Task Test Project", owner_id=user.id)
     session.add(project)
@@ -42,11 +46,7 @@ def test_create_task(client: TestClient, auth_headers: dict, session: Session):
 
 def test_list_tasks(client: TestClient, auth_headers: dict, session: Session):
     """タスク一覧取得"""
-    from app.models import User
-
-    user = session.exec(
-        session.query(User).where(User.email == "test@example.com")
-    ).first()
+    user = _get_auth_user(session)
 
     project = Project(name="List Tasks Project", owner_id=user.id)
     session.add(project)
@@ -55,7 +55,7 @@ def test_list_tasks(client: TestClient, auth_headers: dict, session: Session):
 
     # タスクを作成
     task1 = Task(title="Task 1", project_id=project.id, status="todo")
-    task2 = Task(title="Task 2", project_id=project.id, status="doing")
+    task2 = Task(title="Task 2", project_id=project.id, status="in_progress")
     session.add(task1)
     session.add(task2)
     session.commit()
@@ -64,18 +64,14 @@ def test_list_tasks(client: TestClient, auth_headers: dict, session: Session):
 
     assert response.status_code == 200
     data = response.json()
-    assert len(data) >= 2
+    assert len(data["items"]) >= 2
 
 
 def test_list_tasks_with_filter(
     client: TestClient, auth_headers: dict, session: Session
 ):
     """ステータスフィルタリング"""
-    from app.models import User
-
-    user = session.exec(
-        session.query(User).where(User.email == "test@example.com")
-    ).first()
+    user = _get_auth_user(session)
 
     project = Project(name="Filter Tasks Project", owner_id=user.id)
     session.add(project)
@@ -95,16 +91,12 @@ def test_list_tasks_with_filter(
 
     assert response.status_code == 200
     data = response.json()
-    assert all(t["status"] == "todo" for t in data)
+    assert all(t["status"] == "todo" for t in data["items"])
 
 
 def test_update_task(client: TestClient, auth_headers: dict, session: Session):
     """タスク更新"""
-    from app.models import User
-
-    user = session.exec(
-        session.query(User).where(User.email == "test@example.com")
-    ).first()
+    user = _get_auth_user(session)
 
     project = Project(name="Update Task Project", owner_id=user.id)
     session.add(project)
@@ -118,14 +110,14 @@ def test_update_task(client: TestClient, auth_headers: dict, session: Session):
 
     response = client.put(
         f"/api/tasks/{task.id}",
-        json={"title": "Updated Title", "status": "doing"},
+        json={"title": "Updated Title", "status": "in_progress"},
         headers=auth_headers,
     )
 
     assert response.status_code == 200
     data = response.json()
     assert data["title"] == "Updated Title"
-    assert data["status"] == "doing"
+    assert data["status"] == "in_progress"
 
 
 def test_update_task_not_found(client: TestClient, auth_headers: dict):
@@ -139,11 +131,7 @@ def test_update_task_not_found(client: TestClient, auth_headers: dict):
 
 def test_delete_task(client: TestClient, auth_headers: dict, session: Session):
     """タスク削除"""
-    from app.models import User
-
-    user = session.exec(
-        session.query(User).where(User.email == "test@example.com")
-    ).first()
+    user = _get_auth_user(session)
 
     project = Project(name="Delete Task Project", owner_id=user.id)
     session.add(project)
@@ -162,14 +150,13 @@ def test_delete_task(client: TestClient, auth_headers: dict, session: Session):
     # 削除確認
     response = client.get(f"/api/projects/{project.id}/tasks", headers=auth_headers)
     data = response.json()
-    assert not any(t["id"] == task.id for t in data)
+    assert not any(t["id"] == task.id for t in data["items"])
 
 
 def test_create_task_forbidden_project(
     client: TestClient, auth_headers: dict, session: Session
 ):
     """他ユーザーのプロジェクトにタスク作成は拒否"""
-    # 別ユーザーを作成
     other_user = User(
         email="other_task@example.com",
         password_hash=hash_password("password123"),
@@ -179,7 +166,6 @@ def test_create_task_forbidden_project(
     session.commit()
     session.refresh(other_user)
 
-    # 別ユーザーのプロジェクト
     other_project = Project(name="Other User Project", owner_id=other_user.id)
     session.add(other_project)
     session.commit()

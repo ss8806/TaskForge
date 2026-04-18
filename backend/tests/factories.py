@@ -13,10 +13,8 @@ class UserFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session_persistence = "commit"
 
     email = factory.Sequence(lambda n: f"user{n}@example.com")
-    name = factory.Faker("name")
     password_hash = "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"  # testpassword123
     role = "user"
-    points = 0
     total_points = 0
 
 
@@ -29,7 +27,6 @@ class ProjectFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     name = factory.Sequence(lambda n: f"Project {n}")
     description = factory.Faker("text", max_nb_chars=200)
-    status = "active"
     owner = factory.SubFactory(UserFactory)
 
 
@@ -56,7 +53,5 @@ class TaskFactory(factory.alchemy.SQLAlchemyModelFactory):
     title = factory.Sequence(lambda n: f"Task {n}")
     description = factory.Faker("text", max_nb_chars=500)
     status = "todo"
-    priority = "medium"
-    assignee = None
+    priority = 2
     sprint = factory.SubFactory(SprintFactory)
-    creator = factory.SelfAttribute("sprint.project.owner")
