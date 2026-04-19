@@ -171,3 +171,149 @@ class WorkflowState(TypedDict):
 2. **バックエンド**:
    - FastAPIの `HTTPException` を適切にスロー（400: バリデーション、401: 認証、403: 認可、404: リソース不在）。
    - キャッチされない例外はグローバルなException Handlerで捕捉し、500 Internal Server Errorとしてフォーマットし、スタックトレースはログのみに出力（本番環境想定）。
+
+---
+
+## 7. アーキテクチャ詳細（更新）
+
+### 7.1 システム依存関係図
+
+```mermaid
+graph TB
+    subgraph "クライアント"
+        FE["Next.js フロントエンド"]
+        MCP["外部ツール/MCP"]
+    end
+    
+    subgraph "バックエンド"
+        APP["FastAPI<br/>main.py"]
+        AUTH["認証<br/>auth.py"]
+        PRJ["プロジェクト<br/>projects.py"]
+        TSK["タスク<br/>tasks.py"]
+        SPR["スプリント<br/>sprints.py"]
+        AI["AI処理<br/>ai.py"]
+        ADM["管理者<br/>admin.py"]
+        PTS["ポイント<br/>points.py"]
+    end
+    
+    subgraph "ミドルウェア"
+        CORS["CORS"]
+        RL["レート制限"]
+        EH["エラーハンドラー"]
+    end
+    
+    subgraph "データベース"
+        PG[("PostgreSQL")]
+        RD[("Redis")]
+    end
+    
+    subgraph "非同期処理"
+        CEL["Celery Worker"]
+    end
+    
+    subgraph "外部サービス"
+        OPENAI["OpenAI API"]
+    end
+    
+    FE --> APP
+    MCP --> APP
+    APP --> AUTH & PRJ & TSK & SPR & AI & ADM & PTS
+    APP --> CORS & RL & EH
+    APP --> PG
+    APP --> RD
+    AI --> CEL
+    CEL --> OPENAI
+```
+
+### 7.2 ミドルウェア構成
+
+| ミドルウェア | 目的 | 設定 |
+|------------|------|------|
+| CORS | クロスオリジン制御 | 許可オリジンのみ |
+| Rate Limiting | DDoS/ブルートフォース対策 | SlowAPI (5-100回/分) |
+| Error Handler | グローバルエラー処理 | カスタム例外ハンドラー |
+| Trusted Host | ホストヘッダー検証 | 本番ドメインのみ |
+
+### 7.3 Celery + Redis 非同期処理アーキテクチャ
+
+**構成**:
+```
+FastAPI → Celery Broker (Redis) → Celery Worker → OpenAI API
+                                      ↓
+                              Celery Backend (Redis)
+                                      ↓
+                            クライアント (ポーリング)
+```
+
+**ユースケース**:
+- AIタスク分解（10-30秒かかる処理）
+- リポジトリ分析
+- 大量データ処理
+
+**実装例**:
+```python
+# tasks/ai_tasks.py
+from celery import Celery
+from app.services.ai_service import run_ai_decomposition
+
+celery_app = Celery(
+    "taskforge",
+    broker=settings.REDIS_URL,
+    backend=settings.REDIS_URL
+)
+
+@celery_app.task(bind=True)
+def decompose_tasks_async(self, project_id: int, prompt: str):
+    """AIタスク分解を非同期で実行"""
+    self.update_state(state="PROGRESS", meta={"progress": 0})
+    
+    result = run_ai_decomposition(prompt)
+    
+    self.update_state(state="SUCCESS", meta={"progress": 100})
+    return result
+```
+
+### 7.4 LangGraph ワークフロー詳細
+
+**State定義**:
+```python
+class WorkflowState(TypedDict):
+    user_requirement: str
+    epics: List[dict]
+    tasks: List[dict]
+    sprints: List[dict]
+    error: Optional[str]
+```
+
+**ノードフロー**:
+1. **Parse Requirement**: ユーザー入力からエピック抽出
+2. **Decompose Tasks**: 各エピックを詳細タスクに分解
+3. **Plan Sprints**: タスクをスプリントに割り当て
+4. **Validate**: 結果の検証と整形
+
+### 7.5 追加機能
+
+#### ポイントシステム（実装済み）
+- ユーザーの活動に応じてポイント付与
+- 実績（Achievement）の自動解除
+- リーダーボード表示
+
+#### リポジトリ分析（実装済み）
+- GitHubリポジトリの登録
+- Tree-sitterによるコード構造解析
+- 依存関係分析
+- タスクとコードの関連付け
+
+#### MCPエンドポイント（実装済み）
+- 外部ツールとの統合
+- AIエージェントによるAPI操作
+
+---
+
+## 8. 関連ドキュメント
+
+- [API仕様書](./APISpecification.md)
+- [データベース設計書](./DatabaseDesign.md)
+- [セキュリティ設計書](./SecurityDesign.md)
+- [基本設計書](./BasicDesign.md)
+- [repowiki プロジェクト概要](../.qoder/repowiki/ja/content/プロジェクト概要.md)
