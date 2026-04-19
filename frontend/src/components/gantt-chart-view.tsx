@@ -41,7 +41,7 @@ export function GanttChartView({ projectId }: GanttChartViewProps) {
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ["projects", projectId, "tasks"],
-    queryFn: () => tasksApi.list(projectId).then((res) => res.data),
+    queryFn: () => tasksApi.list(projectId),
   });
 
   // Scroll to "today" on initial load

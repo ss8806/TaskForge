@@ -89,9 +89,14 @@ export default function ProjectPage() {
   const createTaskMutation = useMutation({
     mutationFn: (data: {
       title: string;
-      description: string;
+      description?: string;
       sprint_id?: number;
-    }) => tasksApi.create(projectId, data),
+    }) =>
+      tasksApi.create(projectId, {
+        ...data,
+        status: "todo",
+        priority: 2,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["projects", projectId, "tasks"],

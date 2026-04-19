@@ -203,13 +203,13 @@ function TaskCard({
     transform: CSS.Translate.toString(transform),
   };
 
-  const priorityColors = {
+  const priorityColors: Record<number, string> = {
     1: "bg-blue-400/10 text-blue-400 border-blue-400/20",
     2: "bg-amber-400/10 text-amber-400 border-amber-400/20",
     3: "bg-rose-400/10 text-rose-400 border-rose-400/20",
   };
 
-  const priorityLabels = {
+  const priorityLabels: Record<number, string> = {
     1: "Low",
     2: "Medium",
     3: "High",

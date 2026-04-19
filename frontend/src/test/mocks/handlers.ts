@@ -1,7 +1,7 @@
 import { http, HttpResponse } from "msw";
 import { setupWorker } from "msw/browser";
 
-import type { Project, Task, User } from "@/types";
+import type { Project, Task } from "@/types";
 
 // ハンドラー定義
 export const handlers = [
@@ -14,15 +14,6 @@ export const handlers = [
       return HttpResponse.json({
         access_token: "mock-jwt-token",
         token_type: "bearer",
-        user: {
-          id: 1,
-          email,
-          name: "Test User",
-          role: "user",
-          points: 100,
-          total_points: 100,
-          achievements: [],
-        } as User,
       });
     }
 

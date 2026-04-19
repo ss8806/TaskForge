@@ -220,7 +220,7 @@ function SprintSection({
                   onClick={() => onTaskClick(task)}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <TaskStatusIcon status={task.status} />
+                    <TaskStatusIcon status={task.status as TaskStatus} />
                     <span
                       className={cn(
                         "text-sm text-foreground/80 truncate",
@@ -270,7 +270,7 @@ function BacklogTaskCard({
   onTaskClick: () => void;
   onAssignSprint: (sprintId: number) => void;
 }) {
-  const priorityColors = {
+  const priorityColors: Record<number, string> = {
     1: "text-blue-400 bg-blue-400/10 border-blue-400/20",
     2: "text-amber-400 bg-amber-400/10 border-amber-400/20",
     3: "text-rose-400 bg-rose-400/10 border-rose-400/20",

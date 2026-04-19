@@ -63,8 +63,8 @@ export function TaskDetailDialog({
       setFormData({
         title: task.title || "",
         description: task.description || "",
-        status: task.status,
-        priority: task.priority,
+        status: task.status as TaskStatus,
+        priority: task.priority as TaskPriority,
         start_date: task.start_date
           ? format(new Date(task.start_date), "yyyy-MM-dd")
           : "",
