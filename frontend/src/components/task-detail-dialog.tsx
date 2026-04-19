@@ -53,8 +53,9 @@ export function TaskDetailDialog({
 
   const { data: sprints } = useQuery({
     queryKey: ["projects", projectId, "sprints"],
-    queryFn: () => sprintsApi.list(projectId).then((res) => res.data),
+    queryFn: () => sprintsApi.list(projectId),
     enabled: !!projectId,
+    placeholderData: [],
   });
 
   useEffect(() => {

@@ -14,13 +14,11 @@ def list_sprints(
     project_id: int,
     session: SessionDep,
     current_user: CurrentUserDep,
-    limit: int = 50,
-    offset: int = 0,
 ):
     verify_project_access(project_id, current_user, session)
     base_query = select(Sprint).where(Sprint.project_id == project_id)
     base_query = filter_active(base_query, Sprint)
-    sprints = session.exec(base_query.offset(offset).limit(limit)).all()
+    sprints = session.exec(base_query).all()
     return sprints
 
 
