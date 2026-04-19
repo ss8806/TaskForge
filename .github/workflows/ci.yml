@@ -152,6 +152,12 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Generate types from OpenAPI
+        run: bun run generate:types
+        env:
+          BACKEND_URL: http://localhost:8000
+        continue-on-error: true
+
       - name: Run TypeScript check
         run: bunx tsc --noEmit
 

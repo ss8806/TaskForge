@@ -117,6 +117,10 @@ format-frontend:
   @echo "✨ フロントエンドのコードをフォーマット中..."
   cd frontend && bun run format
 
+generate-types:
+  @echo "🔄 OpenAPIからTypeScript型を生成中..."
+  cd frontend && bash scripts/generate-types.sh
+
 health:
   @echo "🏥 ヘルスチェックを実行中..."
   @curl -s http://localhost:8000/health | python3 -m json.tool || echo "❌ バックエンドが応答しません"
