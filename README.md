@@ -93,6 +93,41 @@ bun run dev
 
 このプロジェクトでは、開発効率とコード品質を向上させるためのツールを導入しています。
 
+### セキュリティ設定
+
+#### GitHub Actions Secrets の設定（初回のみ）
+
+CI/CDでテストを実行するには、GitHub リポジトリの Secrets に以下を設定する必要があります：
+
+1. GitHub リポジトリページ → **Settings** → **Secrets and variables** → **Actions**
+2. **New repository secret** で以下を追加：
+
+| Secret Name | 設定値 | 生成コマンド |
+|-------------|--------|-------------|
+| `JWT_SECRET_KEY` | 64文字以上のランダム文字列 | `openssl rand -base64 64` |
+| `OPENAI_API_KEY` | あなたのOpenAI APIキー | - |
+
+**注意**: これらのSecretはCI環境でのみ使用され、ログには表示されません。
+
+#### 環境変数の設定
+
+```bash
+# ルートディレクトリ
+cp .env.example .env
+# .envファイルをエディタで開き、実際の値を設定
+
+# バックエンド
+cd backend
+cp .env.example .env
+# .envファイルをエディタで開き、実際の値を設定
+
+# 安全なパスワードの生成
+openssl rand -base64 32  # データベース用
+openssl rand -base64 64  # JWT用
+```
+
+**重要**: `.env`ファイルは絶対にGitにコミットしないでください。
+
 ### コードフォーマット・リンティング
 
 #### バックエンド (Python)

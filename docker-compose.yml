@@ -7,8 +7,8 @@ services:
     ports:
       - "${DB_PORT:-5433}:5432"
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}'
       POSTGRES_DB: ${POSTGRES_DB:-taskforge}
     volumes:
       - postgres_data:/var/lib/postgresql/data

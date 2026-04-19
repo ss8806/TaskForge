@@ -68,11 +68,11 @@ jobs:
       run:
         working-directory: backend
     env:
-      JWT_SECRET_KEY: "test-secret-key-for-ci-that-is-at-least-sixty-four-characters-long-enough"
+      JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
       DATABASE_URL: "sqlite:///test.db"
       REDIS_URL: "redis://localhost:6379/0"
       CELERY_BROKER_URL: "redis://localhost:6379/1"
-      OPENAI_API_KEY: "sk-test-dummy-key-for-ci"
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     steps:
       - uses: actions/checkout@v4
 
