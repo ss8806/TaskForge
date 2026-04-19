@@ -124,18 +124,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install
 
       - name: Run ESLint
-        run: npm run lint
+        run: bun run lint
 
   frontend-typecheck:
     name: Frontend Type Check
@@ -146,18 +144,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install
 
       - name: Run TypeScript check
-        run: npx tsc --noEmit
+        run: bunx tsc --noEmit
 
   frontend-test:
     name: Frontend Tests
@@ -168,18 +164,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install
 
       - name: Run tests with coverage
-        run: npm run test:coverage -- --run
+        run: bun run test:coverage -- --run
 
       - name: Upload test results
         if: always()
@@ -215,15 +209,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install
 
       - name: Build
-        run: npm run build
+        run: bun run build

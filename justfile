@@ -50,7 +50,7 @@ backend:
 
 frontend:
   @echo "⚛️ フロントエンドを起動中..."
-  cd frontend && npm run dev
+  cd frontend && bun run dev
 
 db-migrate:
   @echo "📦 データベースマイグレーションを実行中..."
@@ -74,7 +74,7 @@ test-backend:
 
 test-frontend:
   @echo "🧪 フロントエンドテストを実行中..."
-  cd frontend && npm run test
+  cd frontend && bun run test
 
 test-backend-coverage:
   @echo "📊 バックエンドテスト（カバレッジ）を実行中..."
@@ -82,13 +82,13 @@ test-backend-coverage:
 
 test-frontend-coverage:
   @echo "📊 フロントエンドテスト（カバレッジ）を実行中..."
-  cd frontend && npm run test:coverage
+  cd frontend && bun run test:coverage
 
 setup:
   @echo "🔧 TaskForgeの初期セットアップを実行中..."
   just infra-start
   just db-migrate
-  cd frontend && npm install
+  cd frontend && bun install
   cd backend && uv sync
   @echo "✅ セットアップ完了！ just dev で開発サーバーを起動してください。"
 
@@ -103,7 +103,7 @@ lint-backend:
 
 lint-frontend:
   @echo "🔍 フロントエンドのリンターを実行中..."
-  cd frontend && npm run lint
+  cd frontend && bun run lint
 
 format:
   just format-backend
@@ -115,7 +115,7 @@ format-backend:
 
 format-frontend:
   @echo "✨ フロントエンドのコードをフォーマット中..."
-  cd frontend && npm run format
+  cd frontend && bun run format
 
 health:
   @echo "🏥 ヘルスチェックを実行中..."

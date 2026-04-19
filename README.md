@@ -73,10 +73,10 @@ uvicorn app.main:app --reload --port 8000
 cd frontend
 
 # 依存関係のインストール
-npm install
+bun install
 
 # 開発サーバーの起動
-npm run dev
+bun run dev
 ```
 - アプリケーションURL: [http://localhost:3000](http://localhost:3000)
 
