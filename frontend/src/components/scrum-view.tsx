@@ -35,12 +35,14 @@ export function ScrumView({ projectId, onTaskClick }: ScrumViewProps) {
 
   const { data: sprints, isLoading: isSprintsLoading } = useQuery({
     queryKey: ["projects", projectId, "sprints"],
-    queryFn: () => sprintsApi.list(projectId) /* .then((res) => res.data) */,
+    queryFn: () => sprintsApi.list(projectId),
+    placeholderData: [],
   });
 
   const { data: tasks, isLoading: isTasksLoading } = useQuery({
     queryKey: ["projects", projectId, "tasks"],
-    queryFn: () => tasksApi.list(projectId) /* .then((res) => res.data) */,
+    queryFn: () => tasksApi.list(projectId),
+    placeholderData: [],
   });
 
   const updateTaskMutation = useMutation({
