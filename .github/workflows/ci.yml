@@ -88,7 +88,14 @@ jobs:
         run: uv sync --all-extras
 
       - name: Run tests
-        run: uv run pytest --cov=app --cov-report=term-missing --cov-report=xml
+        run: uv run pytest --cov=app --cov-report=term-missing --cov-report=xml --junitxml=test-results.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: backend/test-results.xml
 
       - name: Upload coverage report
         if: always()
@@ -173,6 +180,13 @@ jobs:
 
       - name: Run tests with coverage
         run: npm run test:coverage -- --run
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-results
+          path: frontend/coverage/
 
       - name: Upload frontend coverage
         if: always()
