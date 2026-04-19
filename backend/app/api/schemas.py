@@ -90,7 +90,7 @@ class SprintResponse(BaseModel):
 
 # ── Task schemas ──────────────────────────────────────────────────────────────
 
-VALID_TASK_STATUSES = {"todo", "in_progress", "review", "done"}
+VALID_TASK_STATUSES = {"todo", "doing", "done"}
 
 
 class TaskCreate(BaseModel):

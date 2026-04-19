@@ -1,6 +1,4 @@
-import { apiFetch } from "./fetch-client";
 import type {
-  TokenResponse,
   Project,
   ProjectCreate,
   Sprint,
@@ -8,7 +6,10 @@ import type {
   Task,
   TaskCreate,
   TaskUpdate,
+  TokenResponse,
 } from "@/types";
+
+import { apiFetch } from "./fetch-client";
 
 // ── Auth ────────────────────────────────────────────────────────────────────
 
@@ -28,8 +29,8 @@ export const authApi = {
 // ── Projects ─────────────────────────────────────────────────────────────────
 
 export const projectsApi = {
-  list: (limit = 20, offset = 0) =>
-    apiFetch<Project[]>("/api/projects", { params: { limit, offset } }),
+  list: (page = 1, page_size = 20) =>
+    apiFetch<{ items: Project[]; total: number; page: number; page_size: number; total_pages: number }>("/api/projects", { params: { page, page_size } }).then(res => res.items),
   create: (data: ProjectCreate) =>
     apiFetch<Project>("/api/projects", {
       method: "POST",
@@ -69,10 +70,14 @@ export const tasksApi = {
     params?: {
       status?: string;
       sprint_id?: number;
-      limit?: number;
-      offset?: number;
+      page?: number;
+      page_size?: number;
     }
-  ) => apiFetch<Task[]>(`/api/projects/${projectId}/tasks`, { params }),
+  ) =>
+    apiFetch<{ items: Task[]; total: number; page: number; page_size: number; total_pages: number }>(
+      `/api/projects/${projectId}/tasks`,
+      { params }
+    ).then((res) => res.items),
   create: (projectId: number, data: TaskCreate) =>
     apiFetch<Task>(`/api/projects/${projectId}/tasks`, {
       method: "POST",
@@ -89,9 +94,19 @@ export const tasksApi = {
 
 // ── AI ────────────────────────────────────────────────────────────────────────
 
+interface AIDecomposeResponse {
+  tasks: Array<{
+    title: string;
+    description?: string;
+    status?: string;
+    priority?: number;
+    estimate?: number;
+  }>;
+}
+
 export const aiApi = {
   decompose: (projectId: number, prompt: string, sprintId?: number) =>
-    apiFetch<{ tasks: any[] }>(`/api/projects/${projectId}/ai/decompose`, {
+    apiFetch<AIDecomposeResponse>(`/api/projects/${projectId}/ai/decompose`, {
       method: "POST",
       body: JSON.stringify({ prompt, sprint_id: sprintId }),
     }),
