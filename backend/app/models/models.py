@@ -86,7 +86,9 @@ class Achievement(SQLModel, table=True):
     """実績モデル"""
 
     id: Optional[int] = Field(default=None, primary_key=True)
+    key: str = Field(unique=True, index=True, nullable=False)
     name: str = Field(nullable=False)
+    title: str = Field(nullable=False)
     description: Optional[str] = Field(default=None)
     points: int = Field(default=0, nullable=False)
     icon: Optional[str] = Field(default=None)

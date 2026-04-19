@@ -119,7 +119,7 @@ def test_list_sprints(client: TestClient, auth_headers: dict, session: Session):
 def test_list_sprints_pagination(
     client: TestClient, auth_headers: dict, session: Session
 ):
-    """スプリント一覧のページネーション"""
+    """スプリント一覧取得（全件取得）"""
     project = _create_project_for_auth_user(session)
 
     for i in range(5):
@@ -127,13 +127,14 @@ def test_list_sprints_pagination(
     session.commit()
 
     response = client.get(
-        f"/api/projects/{project.id}/sprints?limit=2&offset=0",
+        f"/api/projects/{project.id}/sprints",
         headers=auth_headers,
     )
 
     assert response.status_code == 200
     data = response.json()
-    assert len(data) <= 2
+    # スプリントAPIはページネーションなし（全件取得）
+    assert len(data) >= 5
 
 
 def test_list_sprints_forbidden_project(

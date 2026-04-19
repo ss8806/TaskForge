@@ -110,14 +110,14 @@ def test_update_task(client: TestClient, auth_headers: dict, session: Session):
 
     response = client.put(
         f"/api/tasks/{task.id}",
-        json={"title": "Updated Title", "status": "in_progress"},
+        json={"title": "Updated Title", "status": "doing"},
         headers=auth_headers,
     )
 
     assert response.status_code == 200
     data = response.json()
     assert data["title"] == "Updated Title"
-    assert data["status"] == "in_progress"
+    assert data["status"] == "doing"
 
 
 def test_update_task_not_found(client: TestClient, auth_headers: dict):

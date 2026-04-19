@@ -30,18 +30,21 @@ def achievements(session: Session):
         {
             "key": "first_commit",
             "title": "初回コミット",
+            "name": "First Commit",
             "description": "最初のコミット",
             "points": 100,
         },
         {
             "key": "bug_hunter",
             "title": "バグハンター",
+            "name": "Bug Hunter",
             "description": "バグを修正",
             "points": 50,
         },
         {
             "key": "repo_cleaner",
             "title": "レポクリーナー",
+            "name": "Repo Cleaner",
             "description": "リポジトリを整理",
             "points": 30,
         },
