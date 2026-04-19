@@ -1,10 +1,16 @@
+from pathlib import Path
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# .envファイルの絶対パスを設定
+BACKEND_DIR = Path(__file__).resolve().parent.parent
+ENV_FILE = BACKEND_DIR / ".env"
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(ENV_FILE) if ENV_FILE.exists() else ".env",
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -19,6 +25,8 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
     OPENAI_API_KEY: str = ""  # Required for AI features
+    OPENAI_API_BASE: str = "https://api.openai.com/v1"  # AI API base URL
+    AI_MODEL: str = "gpt-4o-mini"  # AI model name
     ALLOWED_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
 
 

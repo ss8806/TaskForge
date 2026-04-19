@@ -4,7 +4,6 @@ Celery タスク定義
 
 import logging
 
-from celery import shared_task
 from celery.result import AsyncResult
 
 from app.celery_app import celery_app
@@ -13,7 +12,7 @@ from app.services.ai_service import run_ai_decomposition
 logger = logging.getLogger(__name__)
 
 
-@shared_task(bind=True, name="ai.decompose_tasks")
+@celery_app.task(bind=True, name="ai.decompose_tasks")
 def decompose_tasks_async(
     self, project_id: int, user_requirement: str, sprint_id: int | None = None
 ):
