@@ -14,7 +14,11 @@ logger = logging.getLogger(__name__)
 
 @celery_app.task(bind=True, name="ai.decompose_tasks")
 def decompose_tasks_async(
-    self, project_id: int, user_requirement: str, sprint_id: int | None = None
+    self,
+    project_id: int,
+    user_requirement: str,
+    sprint_id: int | None = None,
+    repo_context: dict | None = None,
 ):
     """
     非同期でAIタスク分解を実行
@@ -23,6 +27,7 @@ def decompose_tasks_async(
         project_id: プロジェクトID
         user_requirement: ユーザーからの要件入力
         sprint_id: タスクを追加するスプリントID（任意）
+        repo_context: リポジトリ分析結果（任意）
 
     Returns:
         dict: 分解結果
@@ -38,7 +43,7 @@ def decompose_tasks_async(
 
     try:
         # 非同期関数を同期的に実行
-        result = asyncio.run(run_ai_decomposition(user_requirement))
+        result = asyncio.run(run_ai_decomposition(user_requirement, repo_context=repo_context))
 
         if result.get("error"):
             self.update_state(state="FAILED", meta={"error": result["error"]})

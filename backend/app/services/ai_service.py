@@ -90,6 +90,7 @@ class WorkflowState(TypedDict):
     """LangGraphワークフローの状態定義"""
 
     user_requirement: str
+    repo_context: dict | None
     epics: list[dict]
     tasks: list[dict]
     sprints: list[dict]
@@ -125,13 +126,32 @@ def extract_epics_node(state: WorkflowState) -> WorkflowState:
     """要件からエピック（大分類）を抽出 - JSONモード使用"""
     llm = get_llm()
 
+    # リポジトリ情報の構築
+    repo_context = state.get("repo_context")
+    context_section = ""
+    if repo_context:
+        tech_stack = ", ".join(repo_context.get("tech_stack", []))
+        features = ", ".join(repo_context.get("existing_features", []))
+        api_count = len(repo_context.get("api_endpoints", []))
+        context_section = f"""
+
+## 既存プロジェクト情報
+- 技術スタック: {tech_stack}
+- 既存機能: {features}
+- 既存API: {api_count}個
+
+## 注意事項
+- 既存機能と重複するタスクは作成しないでください
+- 既存の技術スタックに従ってください
+- 既存のAPIを活用してください
+"""
+
     prompt = f"""
     以下のプロジェクト要件から、開発に必要な大分類（エピック）を抽出してください。
     各エピックには名前と簡単な説明を含めてください。
-    
     出力は必ず以下のJSON形式にしてください：
     {{"epics": [{{"name": "エピック名", "description": "説明"}}]}}
-    
+{context_section}
     要件:
     {state["user_requirement"]}
     """
@@ -266,12 +286,13 @@ def create_ai_workflow() -> StateGraph:
 # ============================================================
 
 
-async def run_ai_decomposition(user_requirement: str) -> dict:
+async def run_ai_decomposition(user_requirement: str, repo_context: dict | None = None) -> dict:
     """
     AIワークフローを実行するメイン関数
 
     Args:
         user_requirement: ユーザーからの要件入力
+        repo_context: リポジトリ分析結果（オプション）
 
     Returns:
         dict: {
@@ -285,6 +306,7 @@ async def run_ai_decomposition(user_requirement: str) -> dict:
 
     initial_state: WorkflowState = {
         "user_requirement": user_requirement,
+        "repo_context": repo_context,
         "epics": [],
         "tasks": [],
         "sprints": [],

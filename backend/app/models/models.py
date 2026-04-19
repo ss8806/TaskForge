@@ -3,6 +3,8 @@
 from datetime import datetime
 from typing import Optional
 
+from sqlalchemy import Column
+from sqlalchemy.dialects.postgresql import JSON as PG_JSON
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -41,6 +43,7 @@ class Project(SQLModel, table=True):
     owner: User = Relationship(back_populates="projects")
     sprints: list["Sprint"] = Relationship(back_populates="project")
     tasks: list["Task"] = Relationship(back_populates="project")
+    repository: Optional["Repository"] = Relationship(back_populates="project")
 
 
 class Sprint(SQLModel, table=True):
@@ -123,3 +126,32 @@ class PointsHistory(SQLModel, table=True):
 
     # Relationships
     user: User = Relationship(back_populates="points_history")
+
+
+class Repository(SQLModel, table=True):
+    """リポジトリ情報モデル"""
+
+    __tablename__ = "repository"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    project_id: int = Field(
+        foreign_key="project.id", ondelete="CASCADE", unique=True, nullable=False
+    )
+    url: str = Field(nullable=False, description="GitHubリポジトリURLまたはローカルパス")
+    repo_type: str = Field(default="github", description="github | local")
+    branch: str = Field(default="main", description="対象ブランチ")
+
+    # 分析結果（キャッシュ）
+    analysis_result: Optional[dict] = Field(
+        sa_column=Column(PG_JSON),
+        default=None,
+        description="分析結果のJSON",
+    )
+    last_analyzed_at: Optional[datetime] = Field(default=None)
+
+    # タイムスタンプ
+    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+
+    # Relationships
+    project: Project = Relationship(back_populates="repository")

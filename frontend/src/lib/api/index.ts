@@ -9,6 +9,33 @@ import type {
   TokenResponse,
 } from "@/types";
 
+export interface RepositoryCreate {
+  url: string;
+  repo_type?: string;
+  branch?: string;
+}
+
+export interface RepositoryResponse {
+  id: number;
+  project_id: number;
+  url: string;
+  repo_type: string;
+  branch: string;
+  analysis_result: Record<string, unknown> | null;
+  last_analyzed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AnalysisResultResponse {
+  structure: Record<string, unknown> | null;
+  tech_stack: string[];
+  api_endpoints: Array<Record<string, string>>;
+  database_models: Array<Record<string, string>>;
+  existing_features: string[];
+  last_analyzed_at: string | null;
+}
+
 import { apiFetch } from "./fetch-client";
 
 // ── Auth ────────────────────────────────────────────────────────────────────
@@ -110,4 +137,29 @@ export const aiApi = {
       method: "POST",
       body: JSON.stringify({ prompt, sprint_id: sprintId }),
     }),
+};
+
+// ── Repositories ──────────────────────────────────────────────────────────────
+
+export const repositoriesApi = {
+  register: (projectId: number, data: RepositoryCreate) =>
+    apiFetch<RepositoryResponse>(`/api/projects/${projectId}/repositories`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  analyze: (projectId: number) =>
+    apiFetch<{ status: string; result: Record<string, unknown>; last_analyzed_at: string }>(
+      `/api/projects/${projectId}/repositories/analyze`,
+      { method: "POST" }
+    ),
+
+  getAnalysis: (projectId: number) =>
+    apiFetch<AnalysisResultResponse>(`/api/projects/${projectId}/repositories/analysis`),
+
+  get: (projectId: number) =>
+    apiFetch<RepositoryResponse>(`/api/projects/${projectId}/repositories`),
+
+  delete: (projectId: number) =>
+    apiFetch<void>(`/api/projects/${projectId}/repositories`, { method: "DELETE" }),
 };

@@ -215,3 +215,37 @@ class AddPointsRequest(BaseModel):
     points: int
     reason: str
     task_id: int | None = None
+
+
+# ── Repository schemas ───────────────────────────────────────────────────────
+
+
+class RepositoryCreate(BaseModel):
+    url: str
+    repo_type: str = "github"
+    branch: str = "main"
+
+
+class RepositoryResponse(BaseModel):
+    id: int
+    project_id: int
+    url: str
+    repo_type: str
+    branch: str
+    analysis_result: dict | None
+    last_analyzed_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class AnalysisResultResponse(BaseModel):
+    """分析結果レスポンス"""
+
+    structure: dict | None = None
+    tech_stack: list[str] = []
+    api_endpoints: list[dict] = []
+    database_models: list[dict] = []
+    existing_features: list[str] = []
+    last_analyzed_at: datetime | None = None

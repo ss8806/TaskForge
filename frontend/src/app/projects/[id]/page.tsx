@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { projectsApi, tasksApi, aiApi, sprintsApi } from "@/lib/api";
+import { projectsApi, tasksApi, aiApi, sprintsApi, repositoriesApi } from "@/lib/api";
 import { KanbanBoard } from "@/components/kanban-board";
 import { ScrumView } from "@/components/scrum-view";
 import { SprintManager } from "@/components/sprint-manager";
@@ -33,6 +33,7 @@ import {
   Sparkles,
   Calendar,
   Loader2,
+  Github,
 } from "lucide-react";
 import { useState } from "react";
 import { TaskStatus } from "@/types";
@@ -56,6 +57,9 @@ export default function ProjectPage() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [aiSprintId, setAiSprintId] = useState<string>("none");
+  const [isRepoModalOpen, setIsRepoModalOpen] = useState(false);
+  const [repoUrl, setRepoUrl] = useState("");
+  const [repoType, setRepoType] = useState<"github" | "local">("local");
 
   const { data: project, isLoading: isProjectLoading } = useQuery({
     queryKey: ["projects", projectId],
@@ -128,6 +132,46 @@ export default function ProjectPage() {
     onError: (error) => {
       console.error("AI decomposition failed:", error);
       alert("AIタスク分解に失敗しました");
+    },
+  });
+
+  // リポジトリ情報取得
+  const { data: repository, refetch: refetchRepository } = useQuery({
+    queryKey: ["projects", projectId, "repository"],
+    queryFn: () => repositoriesApi.get(projectId),
+    retry: false,
+  });
+
+  // リポジトリ登録ミューテーション
+  const registerRepositoryMutation = useMutation({
+    mutationFn: (data: { url: string; repo_type: string; branch: string }) =>
+      repositoriesApi.register(projectId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["projects", projectId, "repository"],
+      });
+      setIsRepoModalOpen(false);
+      setRepoUrl("");
+      alert("リポジトリを登録しました");
+    },
+    onError: (error: Error) => {
+      console.error("Failed to register repository:", error);
+      alert("リポジトリの登録に失敗しました");
+    },
+  });
+
+  // リポジトリ分析ミューテーション
+  const analyzeRepositoryMutation = useMutation({
+    mutationFn: () => repositoriesApi.analyze(projectId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["projects", projectId, "repository"],
+      });
+      alert("リポジトリ分析が完了しました");
+    },
+    onError: (error: Error) => {
+      console.error("Failed to analyze repository:", error);
+      alert(`リポジトリ分析に失敗しました: ${error.message}`);
     },
   });
 
@@ -297,6 +341,105 @@ export default function ProjectPage() {
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
                     AIに任せる
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            <Dialog open={isRepoModalOpen} onOpenChange={setIsRepoModalOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="bg-transparent border-border text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                >
+                  <Github className="h-4 w-4 mr-2" />
+                  リポジトリ
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-card border-border text-foreground">
+                <DialogHeader>
+                  <DialogTitle>リポジトリ連携</DialogTitle>
+                  <DialogDescription className="text-muted-foreground">
+                    リポジトリを連携して、AIタスク分解の精度を向上させます。
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                  <div className="space-y-2">
+                    <Label>リポジトリタイプ</Label>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={repoType === "local" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setRepoType("local")}
+                        className="flex-1"
+                      >
+                        ローカル
+                      </Button>
+                      <Button
+                        variant={repoType === "github" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setRepoType("github")}
+                        className="flex-1"
+                        disabled
+                      >
+                        GitHub (準備中)
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="repo-url">
+                      {repoType === "local" ? "ローカルパス" : "GitHub URL"}
+                    </Label>
+                    <Input
+                      id="repo-url"
+                      placeholder={repoType === "local" ? "/path/to/repo" : "https://github.com/user/repo"}
+                      value={repoUrl}
+                      onChange={(e) => setRepoUrl(e.target.value)}
+                      className="bg-background border-border text-foreground focus:ring-primary/20"
+                    />
+                  </div>
+                  {repository && (
+                    <div className="p-3 bg-secondary/50 rounded-lg space-y-2">
+                      <p className="text-sm font-medium">現在のリポジトリ</p>
+                      <p className="text-xs text-muted-foreground">{repository.url}</p>
+                      {repository.last_analyzed_at && (
+                        <p className="text-xs text-muted-foreground">
+                          最終分析: {new Date(repository.last_analyzed_at).toLocaleString("ja-JP")}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <DialogFooter className="flex gap-2">
+                  <Button
+                    onClick={() => {
+                      if (!repoUrl.trim()) {
+                        alert("リポジトリURL/パスを入力してください");
+                        return;
+                      }
+                      registerRepositoryMutation.mutate({
+                        url: repoUrl,
+                        repo_type: repoType,
+                        branch: "main",
+                      });
+                    }}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    disabled={registerRepositoryMutation.isPending || !repoUrl.trim()}
+                  >
+                    {registerRepositoryMutation.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    登録
+                  </Button>
+                  <Button
+                    onClick={() => analyzeRepositoryMutation.mutate()}
+                    variant="secondary"
+                    disabled={analyzeRepositoryMutation.isPending || !repository}
+                  >
+                    {analyzeRepositoryMutation.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    分析実行
                   </Button>
                 </DialogFooter>
               </DialogContent>

@@ -12,7 +12,7 @@ from sqlmodel import Session, select
 
 from app.api.dependencies import get_current_user
 from app.api.error_handlers import register_error_handlers
-from app.api.routers import admin, ai, auth, points, projects, sprints, tasks
+from app.api.routers import admin, ai, auth, points, projects, repositories, sprints, tasks
 from app.core.config import settings
 from app.core.redis import close_redis, init_redis
 from app.db.session import get_session
@@ -118,6 +118,7 @@ app.include_router(sprints.router, prefix="/api")
 app.include_router(ai.router, prefix="/api")
 app.include_router(points.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
+app.include_router(repositories.router, prefix="/api")
 
 
 @app.get("/health")
