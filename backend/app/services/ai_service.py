@@ -26,6 +26,13 @@ class EpicList(BaseModel):
     """エピック一覧"""
 
     epics: list[Epic] = Field(description="抽出されたエピック一覧")
+    
+    @classmethod
+    def from_json(cls, json_str: str) -> "EpicList":
+        """JSON文字列からパース"""
+        import json
+        data = json.loads(json_str)
+        return cls(**data)
 
 
 class TaskItem(BaseModel):
@@ -44,6 +51,13 @@ class TaskList(BaseModel):
     """タスク一覧"""
 
     tasks: list[TaskItem] = Field(description="分解されたタスク一覧")
+    
+    @classmethod
+    def from_json(cls, json_str: str) -> "TaskList":
+        """JSON文字列からパース"""
+        import json
+        data = json.loads(json_str)
+        return cls(**data)
 
 
 class SprintPlan(BaseModel):
@@ -58,6 +72,13 @@ class SprintPlanList(BaseModel):
     """スプリント計画一覧"""
 
     sprints: list[SprintPlan] = Field(description="計画されたスプリント一覧")
+    
+    @classmethod
+    def from_json(cls, json_str: str) -> "SprintPlanList":
+        """JSON文字列からパース"""
+        import json
+        data = json.loads(json_str)
+        return cls(**data)
 
 
 # ============================================================
@@ -89,6 +110,9 @@ def get_llm():
         temperature=0,
         openai_api_key=settings.OPENAI_API_KEY,
         openai_api_base=settings.OPENAI_API_BASE,
+        model_kwargs={
+            "response_format": {"type": "json_object"}  # JSONモードを有効化
+        }
     )
 
 
@@ -98,24 +122,30 @@ def get_llm():
 
 
 def extract_epics_node(state: WorkflowState) -> WorkflowState:
-    """要件からエピック（大分類）を抽出 - 構造化出力使用"""
+    """要件からエピック（大分類）を抽出 - JSONモード使用"""
     llm = get_llm()
-    structured_llm = llm.with_structured_output(EpicList)
 
     prompt = f"""
     以下のプロジェクト要件から、開発に必要な大分類（エピック）を抽出してください。
     各エピックには名前と簡単な説明を含めてください。
+    
+    出力は必ず以下のJSON形式にしてください：
+    {{"epics": [{{"name": "エピック名", "description": "説明"}}]}}
     
     要件:
     {state["user_requirement"]}
     """
 
     try:
-        result: EpicList = structured_llm.invoke([HumanMessage(content=prompt)])
+        response = llm.invoke([HumanMessage(content=prompt)])
+        result = EpicList.from_json(response.content)
         state["epics"] = [epic.model_dump() for epic in result.epics]
         state["error"] = None
 
     except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"EPIC ERROR: {error_detail}")
         state["error"] = f"エピック抽出エラー: {str(e)}"
         state["epics"] = []
 
@@ -123,7 +153,7 @@ def extract_epics_node(state: WorkflowState) -> WorkflowState:
 
 
 def decompose_tasks_node(state: WorkflowState) -> WorkflowState:
-    """エピックを詳細タスクに分解 - 構造化出力使用"""
+    """エピックを詳細タスクに分解 - JSONモード使用"""
     if not state["epics"]:
         state["error"] = "エピックが抽出されていません"
         return state
@@ -131,7 +161,6 @@ def decompose_tasks_node(state: WorkflowState) -> WorkflowState:
     import json
 
     llm = get_llm()
-    structured_llm = llm.with_structured_output(TaskList)
 
     epics_json = json.dumps(state["epics"], ensure_ascii=False, indent=2)
 
@@ -144,12 +173,16 @@ def decompose_tasks_node(state: WorkflowState) -> WorkflowState:
     - estimate: 推定工数（時間）
     - epic: 所属エピック名
     
+    出力は必ず以下のJSON形式にしてください：
+    {{"tasks": [{{"title": "タスク名", "description": "説明", "priority": 2, "estimate": 8.0, "epic": "エピック名"}}]}}
+    
     エピック一覧:
     {epics_json}
     """
 
     try:
-        result: TaskList = structured_llm.invoke([HumanMessage(content=prompt)])
+        response = llm.invoke([HumanMessage(content=prompt)])
+        result = TaskList.from_json(response.content)
         state["tasks"] = [task.model_dump() for task in result.tasks]
         state["error"] = None
 
@@ -161,7 +194,7 @@ def decompose_tasks_node(state: WorkflowState) -> WorkflowState:
 
 
 def plan_sprints_node(state: WorkflowState) -> WorkflowState:
-    """タスクをスプリントに割り振る - 構造化出力使用"""
+    """タスクをスプリントに割り振る - JSONモード使用"""
     if not state["tasks"]:
         state["error"] = "タスクが分解されていません"
         return state
@@ -169,7 +202,6 @@ def plan_sprints_node(state: WorkflowState) -> WorkflowState:
     import json
 
     llm = get_llm()
-    structured_llm = llm.with_structured_output(SprintPlanList)
 
     tasks_json = json.dumps(state["tasks"], ensure_ascii=False, indent=2)
 
@@ -180,6 +212,9 @@ def plan_sprints_node(state: WorkflowState) -> WorkflowState:
     - tasks: 割り当てられたタスクのインデックスリスト（0始まり）
     - total_estimate: 合計推定工数
     
+    出力は必ず以下のJSON形式にしてください：
+    {{"sprints": [{{"name": "スプリント名", "tasks": [0, 1, 2], "total_estimate": 24.0}}]}}
+    
     1スプリントあたりの理想的な工数は80時間程度です。
     依存関係のあるタスクは同じスプリントにまとめてください。
     
@@ -188,7 +223,8 @@ def plan_sprints_node(state: WorkflowState) -> WorkflowState:
     """
 
     try:
-        result: SprintPlanList = structured_llm.invoke([HumanMessage(content=prompt)])
+        response = llm.invoke([HumanMessage(content=prompt)])
+        result = SprintPlanList.from_json(response.content)
         state["sprints"] = [sprint.model_dump() for sprint in result.sprints]
         state["error"] = None
 
