@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
     OPENAI_API_KEY: str = ""  # Required for AI features
+    OPENAI_API_BASE: str = "https://api.openai.com/v1"  # AI API base URL
+    AI_MODEL: str = "gpt-4o-mini"  # AI model name
     ALLOWED_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
 
 

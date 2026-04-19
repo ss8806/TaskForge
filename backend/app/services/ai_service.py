@@ -81,8 +81,15 @@ class WorkflowState(TypedDict):
 
 
 def get_llm():
-    """OpenAI LLMインスタンスを取得"""
-    return ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    """LLMインスタンスを取得（OpenAI互換API）"""
+    from app.core.config import settings
+    
+    return ChatOpenAI(
+        model=settings.AI_MODEL,
+        temperature=0,
+        openai_api_key=settings.OPENAI_API_KEY,
+        openai_api_base=settings.OPENAI_API_BASE,
+    )
 
 
 # ============================================================
