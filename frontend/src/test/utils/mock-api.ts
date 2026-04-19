@@ -1,5 +1,5 @@
-"""APIモックユーティリティ for testing."""
-import { describe, vi, beforeEach, afterEach } from 'vitest';
+/** APIモックユーティリティ for testing. */
+import { vi } from 'vitest';
 
 // グローバルのfetchをモック
 global.fetch = vi.fn();
