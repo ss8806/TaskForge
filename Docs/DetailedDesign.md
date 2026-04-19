@@ -29,14 +29,78 @@ src/
  └─ types/                # 共通のTypeScript型定義
 ```
 
-### 2.2 状態管理・スタイリング要件（確定）
+### 2.2 OpenAPI型自動生成
+
+バックエンドのPydanticスキーマからOpenAPI仕様書経由でTypeScript型を自動生成します。
+
+#### ワークフロー
+
+```
+Backend (Pydantic) → OpenAPI (/openapi.json) → openapi-typescript → frontend/src/types/generated.ts
+```
+
+#### 型生成コマンド
+
+```bash
+# バックエンドが起動している状態で実行
+just generate-types
+# または
+cd frontend && bun run generate:types
+```
+
+#### 生成ファイル
+
+- **`frontend/src/types/generated.ts`**: OpenAPIから自動生成（1756行）
+  - `paths`, `components`, `operations` などの型が含まれる
+  - **手動編集禁止**
+- **`frontend/src/types/index.ts`**: 便利な名前での再エクスポート
+  - `Task`, `Project`, `TaskCreate` など
+
+#### 使用方法
+
+```typescript
+// 自動生成された型をインポート
+import type { Task, Project, TaskCreate } from "@/types";
+
+// APIレスポンス型として使用
+const { data }: { data: Task } = await api.get(`/api/tasks/${taskId}`);
+
+// リクエストボディ型として使用
+const newTask: TaskCreate = {
+  title: "New Task",
+  description: "Task description",
+  // status, priorityはデフォルト値が設定される
+};
+```
+
+#### 重要なルール
+
+1. **`generated.ts`は手動で編集しない**
+   - バックエンドのPydanticスキーマを変更したら、必ず`just generate-types`を実行
+2. **フロントエンド固有の型のみ手動定義**
+   - UI状態（`TaskStatus = 'todo' | 'doing' | 'done'`など）は`types/index.ts`に手動定義
+3. **型キャストが必要な場合**
+   - バックエンドから返るstring/numberをリテラル型に変換する際は`as TaskStatus`などを使用
+4. **CI/CD統合**
+   - GitHub Actionsで型生成ステップを追加し、型チェックを自動化
+
+#### スキーマ変更時の手順
+
+1. バックエンドの`backend/app/api/schemas.py`を修正
+2. バックエンドを再起動（OpenAPI仕様書が自動更新）
+3. `just generate-types`を実行
+4. フロントエンドの型チェックを実行（`bunx tsc --noEmit`）
+5. 必要に応じてフロントエンドの型キャストを更新
+
+### 2.3 状態管理・スタイリング要件（確定）
 - **UI・スタイリング**: `Tailwind CSS` のユーティリティクラスを活用し、コンポーネントライブラリとして `shadcn/ui` を全面採用する。アイコンシステムは `lucide-react` を利用する。
 - **管理者画面**: バックオフィス等の管理要件は `refine` フレームワークを用いて組み込み、開発コストを圧縮する。
 - **フェッチ＆キャッシュ**: `TanStack Query` (React Query) を採用し、サーバー状態とポーリング等のキャッシュを管理。
 - **グローバル状態**: UIの表示状態（現在選択中のビューなど）は `Zustand` を使用。
 - **フォーム・バリデーション**: `React Hook Form` と `Zod` を組み合わせて堅牢なバリデーションと型安全を確保。
+- **型安全**: OpenAPI自動生成型により、バックエンドスキーマとフロントエンド型の同期を自動化。
 
-### 2.3 主要コンポーネント仕様
+### 2.4 主要コンポーネント仕様
 1. **ViewSwitcher**:
    - `activeView` (kanban | scrum | gantt) を状態として持ち、表示する `<KanbanView />`, `<ScrumView />`, `<GanttView />` を切り替える。
 2. **KanbanView**:
@@ -78,6 +142,9 @@ backend/
 
 ### 3.3 リクエスト/レスポンススキーマ (SQLModel)
 SQLModelを利用することで、DBモデルとPydanticスキーマの定義を統合する。
+
+**重要**: バックエンドのPydanticスキーマは、OpenAPI仕様書を通じてフロントエンドのTypeScript型に自動変換される（詳細は2.2節参照）。
+
 例としてTaskモデルの定義：
 ```python
 class TaskBase(SQLModel):

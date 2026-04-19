@@ -8,6 +8,14 @@
 - 開発環境: `http://localhost:8000`
 - 本番環境: `https://api.taskforge.example.com`
 
+### OpenAPI仕様書
+- **自動生成**: バックエンドFastAPIが`/openapi.json`でOpenAPI 3.1仕様書を自動提供
+- **型生成**: `openapi-typescript`を使用して、フロントエンドのTypeScript型を自動生成
+  ```bash
+  just generate-types
+  ```
+- **詳細**: [詳細設計書 - OpenAPI型自動生成](./DetailedDesign.md#22-openapi型自動生成)
+
 ### 認証方式
 - **Bearer Token (JWT)**
 - 認証必須エンドポイント: `Authorization: Bearer <token>` ヘッダーを付与
